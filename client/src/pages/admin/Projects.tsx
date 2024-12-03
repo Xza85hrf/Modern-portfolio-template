@@ -30,7 +30,10 @@ import { useToast } from "@/hooks/use-toast";
 
 import { type InsertProject } from "@db/schema";
 
-type ProjectFormData = Omit<InsertProject, 'id' | 'createdAt' | 'updatedAt' | 'metadata'> & {
+type ProjectFormData = Omit<
+  InsertProject,
+  "id" | "createdAt" | "updatedAt" | "metadata"
+> & {
   technologies: string[];
 };
 
@@ -38,7 +41,7 @@ export default function Projects() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  
+
   const { data: projects, isLoading } = useQuery<Project[]>({
     queryKey: ["projects"],
     queryFn: () => fetch("/api/projects").then((res) => res.json()),
@@ -51,23 +54,27 @@ export default function Projects() {
       description: "",
       image: "",
       technologies: [],
-      link: "",
-      githubLink: "",
+      link: null,
+      githubLink: null,
     },
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: InsertProject) => {
+    mutationFn: async (data: ProjectFormData) => {
       const response = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
-          technologies: Array.isArray(data.technologies) ? data.technologies : []
+          technologies:
+            data.technologies.length > 0 ? data.technologies.join(",") : "",
+          metadata: {},
+          createdAt: new Date(),
+          updatedAt: new Date(),
         }),
       });
       if (!response.ok) {
-        throw new Error('Failed to create project');
+        throw new Error("Failed to create project");
       }
       return response.json();
     },
@@ -94,7 +101,7 @@ export default function Projects() {
         method: "DELETE",
       });
       if (!response.ok) {
-        throw new Error('Failed to delete project');
+        throw new Error("Failed to delete project");
       }
       return response.json();
     },
@@ -115,17 +122,20 @@ export default function Projects() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: Omit<Project, 'technologies'> & { technologies: string[] }) => {
+    mutationFn: async (data: Project & { technologies: string[] }) => {
       const response = await fetch(`/api/projects/${data.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
-          technologies: Array.isArray(data.technologies) ? data.technologies : []
+          technologies:
+            data.technologies.length > 0 ? data.technologies.join(",") : "",
+          metadata: data.metadata || {},
+          updatedAt: new Date(),
         }),
       });
       if (!response.ok) {
-        throw new Error('Failed to update project');
+        throw new Error("Failed to update project");
       }
       return response.json();
     },
@@ -156,38 +166,39 @@ export default function Projects() {
       title: project.title,
       description: project.description,
       image: project.image,
-      technologies: project.technologies,
-      link: project.link ?? "",
-      githubLink: project.githubLink ?? "",
+      technologies: project.technologies ? project.technologies.split(",") : [],
+      link: project.link ?? null,
+      githubLink: project.githubLink ?? null,
     });
   };
-
-  // Technologies handling is now inline with the field render
 
   return (
     <div className="space-y-8">
       <h2 className="text-3xl font-bold">Manage Projects</h2>
-      
+
       <div className="space-y-8">
         <div className="bg-card rounded-lg border p-6 shadow-sm">
           <h3 className="text-xl font-semibold mb-6">
             {editingProject ? "Edit Project" : "Add New Project"}
           </h3>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit((data) => {
-              if (editingProject) {
-                const updateData = {
-                  ...data,
-                  id: editingProject.id,
-                  technologies: Array.isArray(data.technologies) ? data.technologies : [],
-                  link: data.link || null,
-                  githubLink: data.githubLink || null
-                };
-                updateMutation.mutate(updateData);
-              } else {
-                mutation.mutate(data);
-              }
-            })} className="space-y-4">
+            <form
+              onSubmit={form.handleSubmit((data) => {
+                if (editingProject) {
+                  const updateData = {
+                    ...editingProject,
+                    ...data,
+                    technologies: data.technologies || [],
+                    link: data.link || null,
+                    githubLink: data.githubLink || null,
+                  } as Project & { technologies: string[] };
+                  updateMutation.mutate(updateData);
+                } else {
+                  mutation.mutate(data);
+                }
+              })}
+              className="space-y-4"
+            >
               <FormField
                 control={form.control}
                 name="title"
@@ -201,7 +212,7 @@ export default function Projects() {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="description"
@@ -215,7 +226,7 @@ export default function Projects() {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="image"
@@ -223,13 +234,16 @@ export default function Projects() {
                   <FormItem>
                     <FormLabel>Image URL</FormLabel>
                     <FormControl>
-                      <Input placeholder="https://example.com/image.jpg" {...field} />
+                      <Input
+                        placeholder="https://example.com/image.jpg"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="technologies"
@@ -237,65 +251,76 @@ export default function Projects() {
                   <FormItem>
                     <FormLabel>Technologies (comma-separated)</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         placeholder="React, TypeScript, Node.js"
                         {...field}
                         onChange={(e) => {
                           const value = e.target.value;
-                          const technologies = value.split(',').map(t => t.trim()).filter(t => t);
+                          const technologies = value
+                            .split(",")
+                            .map((t) => t.trim())
+                            .filter((t) => t);
                           field.onChange(technologies);
                         }}
-                        value={Array.isArray(field.value) ? field.value.join(', ') : ''}
+                        value={
+                          Array.isArray(field.value)
+                            ? field.value.join(", ")
+                            : ""
+                        }
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="link"
-                render={({ field }) => (
+                render={({ field: { value, onChange, onBlur, ref, name } }) => (
                   <FormItem>
                     <FormLabel>Live Demo URL</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         placeholder="https://example.com"
-                        {...field}
+                        value={value || ""}
+                        onChange={(e) => onChange(e.target.value || null)}
+                        onBlur={onBlur}
+                        name={name}
+                        ref={ref}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="githubLink"
-                render={({ field }) => (
+                render={({ field: { value, onChange, onBlur, ref, name } }) => (
                   <FormItem>
                     <FormLabel>GitHub URL</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         placeholder="https://github.com/username/repo"
-                        value={field.value || ''}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
+                        value={value || ""}
+                        onChange={(e) => onChange(e.target.value || null)}
+                        onBlur={onBlur}
+                        name={name}
+                        ref={ref}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               <div className="flex gap-2">
                 {editingProject && (
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+                  <Button
+                    type="button"
+                    variant="outline"
                     onClick={() => {
                       setEditingProject(null);
                       form.reset({
@@ -303,16 +328,16 @@ export default function Projects() {
                         description: "",
                         image: "",
                         technologies: [],
-                        link: "",
-                        githubLink: "",
+                        link: null,
+                        githubLink: null,
                       });
                     }}
                   >
                     Cancel Edit
                   </Button>
                 )}
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={mutation.isPending || updateMutation.isPending}
                 >
                   {editingProject
@@ -320,15 +345,14 @@ export default function Projects() {
                       ? "Saving..."
                       : "Save Changes"
                     : mutation.isPending
-                    ? "Adding..."
-                    : "Add Project"
-                  }
+                      ? "Adding..."
+                      : "Add Project"}
                 </Button>
               </div>
             </form>
           </Form>
         </div>
-        
+
         <div className="bg-card rounded-lg border p-6 shadow-sm">
           <h3 className="text-xl font-semibold mb-6">Existing Projects</h3>
           {isLoading ? (
@@ -338,52 +362,59 @@ export default function Projects() {
           ) : (
             <div className="space-y-4">
               {projects?.map((project) => (
-                <div key={project.id} className="p-4 border rounded-lg space-y-2">
+                <div
+                  key={project.id}
+                  className="p-4 border rounded-lg space-y-2"
+                >
                   <div className="flex items-center justify-between">
                     <h4 className="font-medium">{project.title}</h4>
                     <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(project)}
+                      >
+                        Edit
+                      </Button>
+                      {project.githubLink && (
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleEdit(project)}
-                        >
-                          Edit
-                        </Button>
-                        {project.githubLink && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={async () => {
-                              try {
-                                const response = await fetch(`/api/projects/${project.id}/sync-github`, {
-                                  method: 'POST',
-                                });
-                                if (!response.ok) {
-                                  throw new Error('Failed to sync with GitHub');
+                          onClick={async () => {
+                            try {
+                              const response = await fetch(
+                                `/api/projects/${project.id}/sync-github`,
+                                {
+                                  method: "POST",
                                 }
-                                await queryClient.invalidateQueries({ queryKey: ["projects"] });
-                                toast({
-                                  title: "Success",
-                                  description: "Project synchronized with GitHub successfully",
-                                });
-                              } catch (error) {
-                                toast({
-                                  title: "Error",
-                                  description: "Failed to sync with GitHub. Please try again.",
-                                  variant: "destructive",
-                                });
+                              );
+                              if (!response.ok) {
+                                throw new Error("Failed to sync with GitHub");
                               }
-                            }}
-                          >
-                            Sync GitHub
-                          </Button>
-                        )}
-                        <AlertDialog>
+                              await queryClient.invalidateQueries({
+                                queryKey: ["projects"],
+                              });
+                              toast({
+                                title: "Success",
+                                description:
+                                  "Project synchronized with GitHub successfully",
+                              });
+                            } catch (error) {
+                              toast({
+                                title: "Error",
+                                description:
+                                  "Failed to sync with GitHub. Please try again.",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                        >
+                          Sync GitHub
+                        </Button>
+                      )}
+                      <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                          >
+                          <Button variant="destructive" size="sm">
                             Delete
                           </Button>
                         </AlertDialogTrigger>
@@ -391,7 +422,8 @@ export default function Projects() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete Project</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Are you sure you want to delete this project? This action cannot be undone.
+                              Are you sure you want to delete this project? This
+                              action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -406,10 +438,20 @@ export default function Projects() {
                       </AlertDialog>
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground">{project.description}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {project.description}
+                  </p>
                   <div className="flex gap-2 flex-wrap">
-                    {(Array.isArray(project.technologies) ? project.technologies : []).map((tech: string) => (
-                      <span key={tech} className="text-xs bg-muted px-2 py-1 rounded">
+                    {(Array.isArray(project.technologies)
+                      ? project.technologies
+                      : project.technologies
+                        ? project.technologies.split(",")
+                        : []
+                    ).map((tech: string) => (
+                      <span
+                        key={tech}
+                        className="text-xs bg-muted px-2 py-1 rounded"
+                      >
                         {tech.trim()}
                       </span>
                     ))}
@@ -420,8 +462,6 @@ export default function Projects() {
           )}
         </div>
       </div>
-
-      
     </div>
   );
 }

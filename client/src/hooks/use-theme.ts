@@ -9,14 +9,12 @@ interface ThemeState {
 
 const useTheme = create<ThemeState>((set) => ({
   theme: "system",
-  setTheme: (theme) => {
+  setTheme: (theme: Theme) => {
     const root = window.document.documentElement;
     root.classList.remove("light", "dark");
     
     if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       root.classList.add(systemTheme);
     } else {
       root.classList.add(theme);
@@ -26,4 +24,4 @@ const useTheme = create<ThemeState>((set) => ({
   },
 }));
 
-export { useTheme };
+export default useTheme;

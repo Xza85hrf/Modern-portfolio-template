@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import { Moon, Sun } from "lucide-react";
-import { useTheme } from "@/hooks/use-theme";
+import useTheme from "@/hooks/use-theme";
 
 export default function Navigation() {
   const [location] = useLocation();

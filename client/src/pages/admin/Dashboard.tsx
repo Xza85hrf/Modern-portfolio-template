@@ -1,10 +1,56 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FolderKanban, FileText, Gauge, MessageSquare, Calendar, BarChart, Clock, Timer, Globe } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { type Project, type Post, type Skill, type Message, type Analytics } from "@db/schema";
-import { BarChart as Chart, ResponsiveContainer, XAxis, YAxis, Tooltip, Bar, CartesianGrid, Legend } from "recharts";
+import {
+  type Project,
+  type Post,
+  type Skill,
+  type Message,
+  type Analytics,
+} from "@db/schema";
+import { BarChart, Clock, Timer, Globe, Calendar } from "lucide-react";
+import {
+  BarChart as Chart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Bar,
+  CartesianGrid,
+  Legend,
+} from "recharts";
 import { format } from "date-fns";
+import { FolderKanban, FileText, Gauge, MessageSquare } from "lucide-react";
+
+function getLatestUpdate(
+  items?: { createdAt: Date | string }[]
+): string | undefined {
+  if (!items || items.length === 0) return undefined;
+
+  const latestItem = items.reduce((latest, current) => {
+    const latestDate =
+      latest.createdAt instanceof Date
+        ? latest.createdAt
+        : new Date(latest.createdAt);
+
+    const currentDate =
+      current.createdAt instanceof Date
+        ? current.createdAt
+        : new Date(current.createdAt);
+
+    return latestDate > currentDate ? latest : current;
+  });
+
+  return latestItem.createdAt instanceof Date
+    ? latestItem.createdAt.toISOString()
+    : String(latestItem.createdAt);
+}
 
 export default function Dashboard() {
   const { data: projects } = useQuery<Project[]>({
@@ -27,48 +73,54 @@ export default function Dashboard() {
     queryFn: () => fetch("/api/messages").then((res) => res.json()),
   });
 
-  const getLatestUpdate = (items?: Array<{ createdAt: string }>) => {
-    if (!items?.length) return null;
-    try {
-      const dates = items
-        .map(item => new Date(item.createdAt))
-        .filter(date => !isNaN(date.getTime()));
-      return dates.length > 0 ? new Date(Math.max(...dates.map(d => d.getTime()))) : null;
-    } catch (error) {
-      console.error('Error processing dates:', error);
-      return null;
-    }
-  };
-
-  const stats = [
-    { 
-      title: "Projects", 
-      value: projects?.length ?? 0, 
+  const dashboardStats = [
+    {
+      title: "Total Portfolio Projects",
+      value: projects?.length ?? 0,
       icon: FolderKanban,
-      lastUpdated: getLatestUpdate(projects),
-      description: "Total portfolio projects"
+      lastUpdated: getLatestUpdate(
+        projects?.map((p) => ({
+          createdAt:
+            p.createdAt instanceof Date ? p.createdAt : new Date(p.createdAt),
+        }))
+      ),
+      description: "Total portfolio projects",
     },
-    { 
-      title: "Blog Posts", 
-      value: posts?.length ?? 0, 
+    {
+      title: "Published Blog Articles",
+      value: posts?.length ?? 0,
       icon: FileText,
-      lastUpdated: getLatestUpdate(posts),
-      description: "Published blog articles"
+      lastUpdated: getLatestUpdate(
+        posts?.map((p) => ({
+          createdAt:
+            p.createdAt instanceof Date ? p.createdAt : new Date(p.createdAt),
+        }))
+      ),
+      description: "Published blog articles",
     },
-    { 
-      title: "Skills", 
-      value: skills?.length ?? 0, 
+    {
+      title: "Technical Skills",
+      value: skills?.length ?? 0,
       icon: Gauge,
-      lastUpdated: getLatestUpdate(skills),
-      description: "Listed technical skills"
+      lastUpdated: getLatestUpdate(
+        skills?.map(() => ({
+          createdAt: new Date(),
+        }))
+      ),
+      description: "Listed technical skills",
     },
-    { 
-      title: "Messages", 
-      value: messages?.length ?? 0, 
+    {
+      title: "Contact Submissions",
+      value: messages?.length ?? 0,
       icon: MessageSquare,
-      lastUpdated: getLatestUpdate(messages),
-      description: "Contact form submissions"
-    }
+      lastUpdated: getLatestUpdate(
+        messages?.map((m) => ({
+          createdAt:
+            m.createdAt instanceof Date ? m.createdAt : new Date(m.createdAt),
+        }))
+      ),
+      description: "Contact form submissions",
+    },
   ];
 
   const { data: analyticsData } = useQuery<{
@@ -85,16 +137,9 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
-        <span className="text-sm text-muted-foreground">
-          Analytics and Statistics
-        </span>
-      </div>
-      
+    <div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => {
+        {dashboardStats.map((stat) => {
           const Icon = stat.icon;
           return (
             <Card key={stat.title} className="relative overflow-hidden">
@@ -109,12 +154,14 @@ export default function Dashboard() {
                 <CardDescription className="text-xs">
                   {stat.description}
                 </CardDescription>
-                {stat.lastUpdated && !isNaN(new Date(stat.lastUpdated).getTime()) && (
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <Calendar className="mr-1 h-3 w-3" />
-                    Last updated: {format(new Date(stat.lastUpdated), "MMM d, yyyy")}
-                  </div>
-                )}
+                {stat.lastUpdated &&
+                  !isNaN(new Date(stat.lastUpdated).getTime()) && (
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      <Calendar className="mr-1 h-3 w-3" />
+                      Last updated:{" "}
+                      {format(new Date(stat.lastUpdated), "MMM d, yyyy")}
+                    </div>
+                  )}
               </CardContent>
               <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-primary/5 via-primary/50 to-primary/5" />
             </Card>
@@ -127,16 +174,28 @@ export default function Dashboard() {
           <>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Views</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Views
+                </CardTitle>
                 <BarChart className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent className="space-y-2">
-                <div className="text-2xl font-bold">{analyticsData.summary.totalViews}</div>
+                <div className="text-2xl font-bold">
+                  {analyticsData.summary.totalViews}
+                </div>
                 <div className="space-y-1">
-                  <CardDescription>Overview of total page visits</CardDescription>
-                <p className="text-xs text-muted-foreground">Across all pages</p>
+                  <CardDescription>
+                    Overview of total page visits
+                  </CardDescription>
                   <p className="text-xs text-muted-foreground">
-                    Most viewed: {analyticsData.pageViews[0]?.pagePath.replace(/^\//, '').replace(/-/g, ' ')} ({analyticsData.pageViews[0]?.percentage}%)
+                    Across all pages
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Most viewed:{" "}
+                    {analyticsData.pageViews[0]?.pagePath
+                      .replace(/^\//, "")
+                      .replace(/-/g, " ")}{" "}
+                    ({analyticsData.pageViews[0]?.percentage}%)
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Updated: {format(new Date(), "MMM d, yyyy")}
@@ -146,7 +205,9 @@ export default function Dashboard() {
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Avg. Session</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Avg. Session
+                </CardTitle>
                 <Clock className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
@@ -154,7 +215,9 @@ export default function Dashboard() {
                   {Math.round(analyticsData.summary.avgSessionDuration)}s
                 </div>
                 <CardDescription>Average session duration</CardDescription>
-                <p className="text-xs text-muted-foreground">Average time spent on site</p>
+                <p className="text-xs text-muted-foreground">
+                  Average time spent on site
+                </p>
               </CardContent>
             </Card>
             <Card>
@@ -166,26 +229,33 @@ export default function Dashboard() {
                 <div className="text-2xl font-bold">
                   {analyticsData.summary.hourlyDistribution.indexOf(
                     Math.max(...analyticsData.summary.hourlyDistribution)
-                  )}:00
+                  )}
+                  :00
                 </div>
                 <CardDescription>Highest traffic hour</CardDescription>
-                <p className="text-xs text-muted-foreground">Most active time of day</p>
+                <p className="text-xs text-muted-foreground">
+                  Most active time of day
+                </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Top Browser</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Top Browser
+                </CardTitle>
                 <Globe className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold capitalize">
                   {Object.entries(analyticsData.summary.browserStats)
-                    .sort(([,a], [,b]) => b - a)[0]?.[0]
-                    .split(' ')[0]
-                    .toLowerCase() || 'N/A'}
+                    .sort(([, a], [, b]) => b - a)[0]?.[0]
+                    .split(" ")[0]
+                    .toLowerCase() || "N/A"}
                 </div>
                 <CardDescription>Primary browser usage</CardDescription>
-                <p className="text-xs text-muted-foreground">Most common browser</p>
+                <p className="text-xs text-muted-foreground">
+                  Most common browser
+                </p>
               </CardContent>
             </Card>
           </>
@@ -199,39 +269,61 @@ export default function Dashboard() {
               <BarChart className="h-5 w-5" />
               Page Views Distribution
             </CardTitle>
-            <CardDescription>Most viewed pages on your portfolio</CardDescription>
+            <CardDescription>
+              Most viewed pages on your portfolio
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[400px] w-full p-8 bg-background/50 rounded-lg border-2 border-border/50">
               {analyticsData?.pageViews ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <Chart 
-                    data={analyticsData.pageViews} 
+                  <Chart
+                    data={analyticsData.pageViews}
                     margin={{ top: 30, right: 40, left: 70, bottom: 70 }}
                     barSize={40}
                   >
                     <defs>
-                      <linearGradient id="viewCount" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9}/>
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
+                      <linearGradient
+                        id="viewCount"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor="hsl(var(--primary))"
+                          stopOpacity={0.9}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor="hsl(var(--primary))"
+                          stopOpacity={0.4}
+                        />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.7} />
-                    <XAxis 
-                      dataKey="pagePath" 
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="hsl(var(--border))"
+                      opacity={0.7}
+                    />
+                    <XAxis
+                      dataKey="pagePath"
                       stroke="hsl(var(--foreground))"
                       tick={{ fill: "hsl(var(--foreground))" }}
                       fontSize={13}
                       tickLine={false}
                       axisLine={{ stroke: "hsl(var(--border))" }}
-                      tickFormatter={(value) => value.replace(/^\//, '').replace(/-/g, ' ')}
+                      tickFormatter={(value) =>
+                        value.replace(/^\//, "").replace(/-/g, " ")
+                      }
                       height={70}
                       angle={-45}
                       textAnchor="end"
                       interval={0}
                       padding={{ left: 30, right: 30 }}
                     />
-                    <YAxis 
+                    <YAxis
                       stroke="hsl(var(--foreground))"
                       tick={{ fill: "hsl(var(--foreground))" }}
                       fontSize={13}
@@ -240,8 +332,8 @@ export default function Dashboard() {
                       tickFormatter={(value) => `${value} views`}
                       padding={{ top: 30 }}
                     />
-                    <Tooltip 
-                      cursor={{ fill: 'var(--muted)', opacity: 0.15 }}
+                    <Tooltip
+                      cursor={{ fill: "var(--muted)", opacity: 0.15 }}
                       contentStyle={{
                         backgroundColor: "var(--card)",
                         border: "2px solid var(--border)",
@@ -263,19 +355,26 @@ export default function Dashboard() {
                       }}
                       formatter={(value, name, props) => {
                         if (name === "viewCount") {
-                          return [`${value} views (${props.payload.percentage}%)`, 'Page Views'];
+                          return [
+                            `${value} views (${props.payload.percentage}%)`,
+                            "Page Views",
+                          ];
                         }
                         return [value, name];
                       }}
-                      labelFormatter={(label) => label.replace(/^\//, '').replace(/-/g, ' ')}
+                      labelFormatter={(label) =>
+                        label.replace(/^\//, "").replace(/-/g, " ")
+                      }
                     />
-                    <Legend 
+                    <Legend
                       verticalAlign="top"
                       height={36}
-                      formatter={(value) => <span className="text-sm font-medium">{value}</span>}
+                      formatter={(value) => (
+                        <span className="text-sm font-medium">{value}</span>
+                      )}
                     />
-                    <Bar 
-                      dataKey="viewCount" 
+                    <Bar
+                      dataKey="viewCount"
                       fill="url(#viewCount)"
                       radius={[8, 8, 0, 0]}
                       maxBarSize={80}
@@ -301,7 +400,9 @@ export default function Dashboard() {
               <FileText className="h-5 w-5" />
               Documentation
             </CardTitle>
-            <CardDescription>Quick access to guides and documentation</CardDescription>
+            <CardDescription>
+              Quick access to guides and documentation
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-3">
@@ -311,7 +412,11 @@ export default function Dashboard() {
                   Initial configuration and customization steps
                 </p>
                 <Button variant="outline" className="w-full" asChild>
-                  <a href="/api/docs/SETUP_GUIDE.md" target="_blank" rel="noopener noreferrer">
+                  <a
+                    href="/api/docs/SETUP_GUIDE.md"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     View Guide
                   </a>
                 </Button>
@@ -322,7 +427,11 @@ export default function Dashboard() {
                   Instructions for deploying the website
                 </p>
                 <Button variant="outline" className="w-full" asChild>
-                  <a href="/api/docs/DEPLOYMENT.md" target="_blank" rel="noopener noreferrer">
+                  <a
+                    href="/api/docs/DEPLOYMENT.md"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     View Guide
                   </a>
                 </Button>
@@ -333,7 +442,11 @@ export default function Dashboard() {
                   Managing content and features
                 </p>
                 <Button variant="outline" className="w-full" asChild>
-                  <a href="/api/docs/ADMIN_GUIDE.md" target="_blank" rel="noopener noreferrer">
+                  <a
+                    href="/api/docs/ADMIN_GUIDE.md"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     View Guide
                   </a>
                 </Button>
@@ -344,7 +457,11 @@ export default function Dashboard() {
                   Configuration templates and examples
                 </p>
                 <Button variant="outline" className="w-full" asChild>
-                  <a href="/api/templates/env" target="_blank" rel="noopener noreferrer">
+                  <a
+                    href="/api/templates/env"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     View Templates
                   </a>
                 </Button>

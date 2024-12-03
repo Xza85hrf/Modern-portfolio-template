@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type Post, insertPostSchema } from "@db/schema";
 import { Button } from "@/components/ui/button";
+import { JSONContent } from "@tiptap/react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +29,16 @@ import { Input } from "@/components/ui/input";
 import BlogEditor from "../../components/BlogEditor";
 import { useToast } from "@/hooks/use-toast";
 
+type PostFormData = {
+  title: string;
+  content: JSONContent;
+  slug: string;
+  tags: string[];
+  id?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
+
 export default function Posts() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -38,7 +49,7 @@ export default function Posts() {
     queryFn: () => fetch("/api/posts").then((res) => res.json()),
   });
 
-  const form = useForm({
+  const form = useForm<PostFormData>({
     resolver: zodResolver(insertPostSchema),
     defaultValues: {
       title: "",
@@ -49,11 +60,16 @@ export default function Posts() {
   });
 
   const mutation = useMutation({
-    mutationFn: (data: Post) =>
+    mutationFn: (data: PostFormData) =>
       fetch("/api/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          tags: data.tags?.join(',') || null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
@@ -66,15 +82,14 @@ export default function Posts() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: Post) => {
+    mutationFn: async (data: PostFormData) => {
       const response = await fetch(`/api/posts/${data.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: data.title,
-          content: data.content,
-          slug: data.slug,
-          tags: Array.isArray(data.tags) ? data.tags : []
+          ...data,
+          tags: data.tags?.join(',') || null,
+          updatedAt: new Date(),
         }),
       });
 
@@ -148,9 +163,9 @@ export default function Posts() {
     setEditingPost(post);
     form.reset({
       title: post.title,
-      content: post.content,
+      content: post.content as JSONContent,
       slug: post.slug,
-      tags: post.tags,
+      tags: post.tags ? post.tags.split(',') : [],
     });
   };
 
@@ -242,7 +257,7 @@ export default function Posts() {
                         placeholder="react, typescript, web development"
                         {...field}
                         onChange={(e) => field.onChange(e.target.value.split(",").map((t) => t.trim()))}
-                        value={field.value?.join(", ")}
+                        value={field.value?.join(", ") || ''}
                       />
                     </FormControl>
                     <FormMessage />
@@ -338,7 +353,7 @@ export default function Posts() {
                     Slug: {post.slug}
                   </p>
                   <div className="flex gap-2 flex-wrap">
-                    {post.tags?.map((tag, index) => (
+                    {post.tags && post.tags.split(',').map((tag: string, index: number) => (
                       <span key={`${post.id}-${tag}-${index}`} className="text-xs bg-muted px-2 py-1 rounded">
                         {tag}
                       </span>
