@@ -37,6 +37,9 @@
      PGPORT=your_db_port             # Database port (default: 5432)
      PGDATABASE=your_db_name         # Database name
 
+     # Port Configuration (Optional)
+     PORT=5000  # Specify custom port for development/production
+
      # GitHub Integration
      # Generate at: https://github.com/settings/tokens
      # Required scopes: repo
@@ -47,6 +50,11 @@
      JWT_SECRET=your_jwt_secret       # For authentication tokens
      COOKIE_SECRET=your_cookie_secret # For session security
      ```
+
+   - Port Configuration Notes:
+     - Default port is 5000
+     - Can be customized using `PORT` environment variable
+     - Server automatically finds next available port if specified port is in use
 
    - For GitHub token:
      1. Go to GitHub Settings > Developer Settings > Personal Access Tokens
@@ -68,8 +76,17 @@
 3. **Start Development Server**
 
    ```bash
+   # Start with default port
    npm run dev
+
+   # Or specify a custom port
+   PORT=3000 npm run dev
    ```
+
+   Port Configuration:
+   - If port 5000 is occupied, server will automatically find an available port
+   - Check terminal output to see the exact port being used
+   - Access the application at the displayed localhost URL
 
 ## Customization
 
