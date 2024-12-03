@@ -2,7 +2,7 @@
 
 ## Project Structure
 
-```
+```sh
 ├── client/                # Frontend React application
 │   ├── src/
 │   │   ├── components/   # Reusable React components
@@ -23,6 +23,7 @@
 This project follows a standard development workflow suitable for any development environment. The setup is platform-agnostic and can be used with any modern IDE or development tools.
 
 Key development features:
+
 - Standard Node.js/React development workflow
 - TypeScript for type safety
 - Modular architecture for easy maintenance
@@ -39,6 +40,7 @@ See the [Deployment Guide](DEPLOYMENT.md) for detailed setup and deployment inst
    - Use functional components with TypeScript
    - Implement proper error boundaries
    - Follow React Query patterns for data fetching
+
    ```tsx
    import { useQuery } from "@tanstack/react-query";
    
@@ -59,6 +61,7 @@ See the [Deployment Guide](DEPLOYMENT.md) for detailed setup and deployment inst
    - Use Tailwind CSS for styling
    - Follow mobile-first approach
    - Use Shadcn components when available
+
    ```tsx
    import { Button } from "@/components/ui/button";
    
@@ -73,6 +76,7 @@ See the [Deployment Guide](DEPLOYMENT.md) for detailed setup and deployment inst
    - Follow RESTful conventions
    - Implement proper error handling
    - Use TypeScript for type safety
+
    ```typescript
    app.get("/api/resource", async (req, res) => {
      try {
@@ -88,6 +92,7 @@ See the [Deployment Guide](DEPLOYMENT.md) for detailed setup and deployment inst
    - Use Drizzle ORM for database operations
    - Implement proper validation
    - Handle edge cases
+
    ```typescript
    import { db } from "../db";
    import { projects } from "@db/schema";
@@ -124,6 +129,7 @@ See the [Deployment Guide](DEPLOYMENT.md) for detailed setup and deployment inst
 ## Development Workflow
 
 1. **Starting Development**
+
    ```bash
    npm run dev
    ```
@@ -137,16 +143,20 @@ See the [Deployment Guide](DEPLOYMENT.md) for detailed setup and deployment inst
 3. **Database Changes**
    - Update schema in `db/schema.ts`
    - Run migration:
+
    ```bash
    npm run db:push
    ```
 
 4. **Deployment**
    - Build application:
+
    ```bash
    npm run build
    ```
+
    - Start production server:
+
    ```bash
    npm start
    ```

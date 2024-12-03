@@ -6,7 +6,7 @@ This portfolio website is built as a full-stack application with a modern archit
 
 ## System Architecture
 
-```
+```sh
 ├── Frontend (React + TypeScript)
 │   ├── Public Routes
 │   │   ├── Home
@@ -45,7 +45,7 @@ This portfolio website is built as a full-stack application with a modern archit
 
 ### Production Environment
 
-```
+```sh
 [Client Browser] ←→ [CDN/Load Balancer]
                      ├── [Frontend Static Assets]
                      │   └── [Asset Cache]
@@ -65,6 +65,7 @@ This portfolio website is built as a full-stack application with a modern archit
 ## Key Components
 
 ### 1. Content Management
+
 - **Admin Dashboard**
   - Secure authentication system
   - Real-time content updates
@@ -73,18 +74,21 @@ This portfolio website is built as a full-stack application with a modern archit
   - Skills and proficiency management
 
 ### 2. Project Showcase
+
 - Automatic synchronization with GitHub repositories
 - Project details and metadata management
 - Technology stack display
 - Live demo links
 
 ### 3. Blog System
+
 - Rich text editor for content creation
 - Comment system for user engagement
 - Tag-based categorization
 - Post preview functionality
 
 ### 4. Analytics Dashboard
+
 - Page view tracking
 - User engagement metrics
 - Browser statistics
@@ -101,6 +105,7 @@ This portfolio website is built as a full-stack application with a modern archit
 ## Data Flow Architecture
 
 ### GitHub Integration
+
 1. Project created/updated in admin dashboard
 2. GitHub webhook triggered
 3. Repository data fetched and synchronized
@@ -137,18 +142,21 @@ This portfolio website is built as a full-stack application with a modern archit
 ## Security Architecture
 
 ### Authentication & Authorization
+
 1. JWT-based authentication
 2. Role-based access control
 3. Session management
 4. Resource-level permissions
 
 ### Data Protection
+
 1. Secure cookie implementation
 2. Database security measures
 3. Connection pooling
 4. Encrypted credentials
 
 ### API Security
+
 1. Rate limiting
 2. Request validation
 3. Input sanitization
@@ -157,18 +165,21 @@ This portfolio website is built as a full-stack application with a modern archit
 ## Performance Architecture
 
 ### Frontend Optimization
+
 1. Code splitting
 2. Asset optimization
 3. Caching strategies
 4. Lazy loading
 
 ### Backend Performance
+
 1. Connection pooling
 2. Query optimization
 3. Response compression
 4. Caching layers
 
 ### Database Optimization
+
 1. Indexing strategy
 2. Query performance
 3. Connection management
@@ -177,12 +188,14 @@ This portfolio website is built as a full-stack application with a modern archit
 ## Scalability Architecture
 
 ### Horizontal Scaling
+
 1. Stateless application design
 2. Load balancing configuration
 3. Session management
 4. Database replication
 
 ### Vertical Scaling
+
 1. Resource optimization
 2. Performance monitoring
 3. Cache utilization
@@ -191,12 +204,14 @@ This portfolio website is built as a full-stack application with a modern archit
 ## Monitoring Architecture
 
 ### Application Monitoring
+
 1. Error tracking
 2. Performance metrics
 3. User analytics
 4. Resource usage
 
 ### Infrastructure Monitoring
+
 1. Server health
 2. Database performance
 3. Network metrics
@@ -205,12 +220,14 @@ This portfolio website is built as a full-stack application with a modern archit
 ## Backup Architecture
 
 ### Data Backup
+
 1. Database backups
 2. Content backups
 3. Configuration backups
 4. Retention policies
 
 ### Disaster Recovery
+
 1. Backup verification
 2. Recovery procedures
 3. Failover mechanisms
@@ -219,6 +236,7 @@ This portfolio website is built as a full-stack application with a modern archit
 ## Future Extensibility
 
 The architecture is designed to be extensible for:
+
 1. Multi-user support
 2. Enhanced analytics
 3. Newsletter integration
@@ -226,6 +244,7 @@ The architecture is designed to be extensible for:
 5. SEO improvements
 
 This architecture ensures:
+
 - Scalable content management
 - Secure authentication
 - Efficient data flow

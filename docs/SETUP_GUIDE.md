@@ -3,6 +3,7 @@
 ## Initial Setup
 
 ### Prerequisites
+
 1. Node.js (v18 or newer)
    - Recommended: Install via Node Version Manager (nvm)
    - Check installation: `node --version`
@@ -17,10 +18,13 @@
 
 1. **Environment Configuration**
    - Copy `.env.template` to `.env`:
+
      ```bash
      cp .env.template .env
      ```
+
    - Fill in required environment variables:
+
      ```env
      # Database Configuration
      # Format: postgresql://[user]:[password]@[host]:[port]/[dbname]
@@ -49,18 +53,20 @@
      2. Generate new token with 'repo' scope
      3. Copy token to .env file
      4. Keep token secure and private
-   
+
    - For GitHub integration:
      1. Go to GitHub Settings > Developer Settings > Personal Access Tokens
      2. Generate a new token with `repo` scope
      3. Copy the token to your `.env` file
 
 2. **Initial Database Setup**
+
    ```bash
    npm run db:push
    ```
 
 3. **Start Development Server**
+
    ```bash
    npm run dev
    ```
@@ -68,6 +74,7 @@
 ## Customization
 
 ### Theme Configuration
+
 Edit `theme.json` to match your preferred design:
 
 ```json
@@ -139,6 +146,7 @@ Edit `theme.json` to match your preferred design:
 ## Maintenance
 
 ### Regular Tasks
+
 1. Database backups
 2. Security updates
 3. Content reviews
@@ -149,9 +157,11 @@ Edit `theme.json` to match your preferred design:
 #### Common Issues and Solutions
 
 1. **Database Connection Issues**
+
    ```bash
    Error: Could not connect to database
    ```
+
    Solutions:
    - Verify database credentials in `.env`
    - Ensure PostgreSQL is running
@@ -159,45 +169,55 @@ Edit `theme.json` to match your preferred design:
    - Verify network connectivity to database host
 
 2. **GitHub Integration Errors**
+
    ```bash
    Error: Bad credentials
    ```
+
    Solutions:
    - Check if GITHUB_TOKEN is correctly set
    - Verify token has required permissions
    - Ensure token hasn't expired
 
 3. **Build Errors**
+
    ```bash
    Error: Cannot find module 'xyz'
    ```
+
    Solutions:
    - Clear node_modules: `rm -rf node_modules`
    - Reinstall dependencies: `npm install`
    - Check for Node.js version compatibility
 
 4. **Authentication Issues**
+
    ```bash
    Error: Invalid credentials
    ```
+
    Solutions:
    - Reset admin password using default credentials
    - Check JWT_SECRET is properly set
    - Clear browser cookies and cache
 
 #### Logs and Monitoring
+
 - Check application logs in `/logs` directory
 - Monitor error reports in the admin dashboard
 - Review analytics for system health
 - Check browser console for frontend errors
 
 For additional support:
+
 1. Review the full documentation in `/docs`
 2. Check GitHub issues for similar problems
 3. Contact support team if issues persist
 
 ## Support
+
 For technical support or questions:
+
 1. Check documentation in `/docs`
 2. Review CONTRIBUTING.md
 3. Open GitHub issues
