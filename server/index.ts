@@ -1,7 +1,9 @@
+import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic } from "./vite";
 import { createServer } from "http";
+import { AddressInfo } from 'net';
 
 function log(message: string) {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -48,6 +50,24 @@ app.use((req, res, next) => {
   next();
 });
 
+function findAvailablePort(server: any, initialPort: number): Promise<number> {
+  return new Promise((resolve, reject) => {
+    server.listen(initialPort, "0.0.0.0", () => {
+      const port = (server.address() as AddressInfo).port;
+      resolve(port);
+    }).on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        // If port is in use, try the next port
+        server.close(() => {
+          resolve(findAvailablePort(server, initialPort + 1));
+        });
+      } else {
+        reject(err);
+      }
+    });
+  });
+}
+
 (async () => {
   registerRoutes(app);
   const server = createServer(app);
@@ -69,10 +89,14 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client
-  const PORT = 5000;
-  server.listen(PORT, "0.0.0.0", () => {
-    log(`serving on port ${PORT}`);
-  });
+  // Use PORT env var or default to 5000, with fallback to dynamic port
+  const initialPort = process.env.PORT ? parseInt(process.env.PORT) : 5000;
+  
+  try {
+    const availablePort = await findAvailablePort(server, initialPort);
+    log(`serving on port ${availablePort}`);
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
 })();
