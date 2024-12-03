@@ -1,10 +1,7 @@
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, JSONContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Button } from "@/components/ui/button";
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@/components/ui/toggle-group";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Bold,
   Italic,
@@ -19,8 +16,8 @@ import {
 import { cn } from "@/lib/utils";
 
 interface BlogEditorProps {
-  content: string;
-  onChange: (content: string) => void;
+  content: string | JSONContent;
+  onChange: (content: string | JSONContent) => void;
 }
 
 export default function BlogEditor({ content, onChange }: BlogEditorProps) {
@@ -34,21 +31,21 @@ export default function BlogEditor({ content, onChange }: BlogEditorProps) {
     ],
     content: (() => {
       try {
-        if (typeof content === 'string') {
+        if (typeof content === "string") {
           return JSON.parse(content);
         }
         return content || { type: "doc", content: [{ type: "paragraph" }] };
       } catch (error) {
-        console.error('Error parsing content:', error);
+        console.error("Error parsing content:", error);
         return { type: "doc", content: [{ type: "paragraph" }] };
       }
     })(),
     onUpdate: ({ editor }) => {
       try {
         const json = editor.getJSON();
-        onChange(typeof content === 'string' ? JSON.stringify(json) : json);
+        onChange(json);
       } catch (error) {
-        console.error('Error updating editor content:', error);
+        console.error("Error updating editor content:", error);
       }
     },
   });
