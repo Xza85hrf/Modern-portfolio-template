@@ -24,14 +24,17 @@ A modern, full-stack portfolio website built with React and Express, featuring c
 
 1. Clone the repository
 2. Install dependencies:
+
    ```bash
    npm install
    ```
+
 3. Set up environment variables:
    - Copy `.env.template` to `.env`
    - Fill in required environment variables
-   
+
 4. Start the development server:
+
    ```bash
    npm run dev
    ```

@@ -19,12 +19,14 @@ This project is a platform-agnostic full-stack application that can be deployed 
 ### Setting Up for Deployment
 
 1. Clone the repository:
+
    ```bash
-   git clone <repository-url>
-   cd portfolio-website
+   git clone https://github.com/Xza85hrf/Modern-portfolio-dashboard.git
+   cd Modern-portfolio-dashboard
    ```
 
 2. Replace the package.json with the clean template:
+
    ```bash
    # Backup existing package.json (optional)
    cp package.json package.json.backup
@@ -37,6 +39,7 @@ This project is a platform-agnostic full-stack application that can be deployed 
    ```
 
 3. Build the application:
+
    ```bash
    npm run build
    ```
@@ -46,11 +49,13 @@ Note: The package.template.json file contains a clean configuration without any 
 ## Prerequisites
 
 ### Required Software
+
 - Node.js v18 or newer
 - PostgreSQL 12 or newer
 - npm or yarn package manager
 
 ### Required Environment Variables
+
 ```env
 # Database Configuration
 DATABASE_URL=postgresql://user:password@host:port/dbname
@@ -71,13 +76,16 @@ COOKIE_SECRET=your_cookie_secret
 ## Initial Setup
 
 ### 1. Project Setup
+
 1. Clone and prepare the repository:
+
    ```bash
-   git clone <repository-url>
-   cd portfolio-website
+   git clone https://github.com/Xza85hrf/Modern-portfolio-dashboard.git
+   cd Modern-portfolio-dashboard
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
@@ -89,25 +97,28 @@ COOKIE_SECRET=your_cookie_secret
    - Generate secure values for JWT_SECRET and COOKIE_SECRET
 
 4. Initialize the database:
+
    ```bash
    # Create database tables and initial schema
    npm run db:push
    ```
 
 5. Build the application:
+
    ```bash
    # Build frontend assets and server
    npm run build
    ```
 
 6. Start the production server:
+
    ```bash
    # Start the application on port 5000
    npm start
    ```
 
 7. Verify the installation:
-   - Access the application at http://localhost:5000
+   - Access the application at <http://localhost:5000>
    - Confirm database connectivity
    - Test admin dashboard access
    - Verify GitHub integration (if configured)
@@ -117,6 +128,7 @@ COOKIE_SECRET=your_cookie_secret
 ### 1. Traditional VPS/Dedicated Server
 
 1. Server Setup:
+
    ```bash
    # Install Node.js
    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
@@ -130,6 +142,7 @@ COOKIE_SECRET=your_cookie_secret
    ```
 
 2. Configure Nginx as reverse proxy:
+
    ```nginx
    server {
        listen 80;
@@ -147,6 +160,7 @@ COOKIE_SECRET=your_cookie_secret
    ```
 
 3. Set up process management:
+
    ```bash
    # Install PM2
    npm install -g pm2
@@ -160,6 +174,7 @@ COOKIE_SECRET=your_cookie_secret
    ```
 
 4. Configure SSL with Let's Encrypt:
+
    ```bash
    sudo apt-get install certbot python3-certbot-nginx
    sudo certbot --nginx -d your-domain.com
@@ -168,8 +183,10 @@ COOKIE_SECRET=your_cookie_secret
 ### 2. Platform-as-a-Service (PaaS)
 
 #### A. Heroku Deployment
+
 1. Install Heroku CLI
 2. Configure application:
+
    ```bash
    heroku create your-app-name
    heroku addons:create heroku-postgresql:hobby-dev
@@ -180,6 +197,7 @@ COOKIE_SECRET=your_cookie_secret
    ```
 
 #### B. DigitalOcean App Platform
+
 1. Connect GitHub repository
 2. Select Node.js environment
 3. Add PostgreSQL database
@@ -187,6 +205,7 @@ COOKIE_SECRET=your_cookie_secret
 5. Deploy application
 
 #### C. Railway/Render
+
 1. Connect to GitHub repository
 2. Select Node.js template
 3. Add PostgreSQL service
@@ -199,9 +218,11 @@ COOKIE_SECRET=your_cookie_secret
 
 1. Create PostgreSQL database
 2. Run migrations:
+
    ```bash
    npm run db:push
    ```
+
 3. Verify database connection
 
 ## Security Configuration
@@ -212,6 +233,7 @@ COOKIE_SECRET=your_cookie_secret
    - Store GitHub token securely
 
 2. Configure CORS if needed:
+
    ```typescript
    app.use(cors({
      origin: process.env.ALLOWED_ORIGINS?.split(',') || [],
@@ -243,6 +265,7 @@ COOKIE_SECRET=your_cookie_secret
 ## Support
 
 For deployment assistance:
+
 1. Check troubleshooting guides
 2. Review documentation
 3. Open GitHub issues
