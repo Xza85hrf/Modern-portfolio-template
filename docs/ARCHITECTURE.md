@@ -43,6 +43,14 @@ This portfolio website is built as a full-stack application with a modern archit
 
 ## Infrastructure Architecture
 
+### Port Configuration and Management
+
+- **Default Port**: 5000
+- **Configurable via Environment Variable**: `PORT`
+- **Dynamic Port Allocation**
+  - Automatic port finding if default port is occupied
+  - Ensures flexibility across different deployment environments
+
 ### Production Environment
 
 ```sh
@@ -53,6 +61,7 @@ This portfolio website is built as a full-stack application with a modern archit
                      ├── [Application Servers]
                      │   ├── [Node.js Server]
                      │   │   ├── [Express Application]
+                     │   │   │   └── [Port Configuration Management]
                      │   │   └── [API Gateway]
                      │   │
                      │   └── [Static File Serving]
@@ -61,6 +70,22 @@ This portfolio website is built as a full-stack application with a modern archit
                          ├── [Primary DB]
                          └── [Replica DBs]
 ```
+
+#### Port Configuration Strategies
+
+1. **Static Port Assignment**
+   - Predefined port (default: 5000)
+   - Consistent across environments
+
+2. **Dynamic Port Allocation**
+   - Automatic port discovery
+   - Prevents port conflicts
+   - Enhances deployment flexibility
+
+3. **Environment-Specific Configuration**
+   - Development: Typically localhost
+   - Staging: Configurable ports
+   - Production: Reverse proxy configuration
 
 ## Key Components
 
@@ -162,14 +187,20 @@ This portfolio website is built as a full-stack application with a modern archit
 3. Input sanitization
 4. Error handling
 
+
 ## Performance Architecture
 
-### Frontend Optimization
+### Port and Network Performance
 
-1. Code splitting
-2. Asset optimization
-3. Caching strategies
-4. Lazy loading
+1. **Port Management**
+   - Efficient port allocation mechanism
+   - Minimal overhead in port selection
+   - Quick fallback to alternative ports
+
+2. **Connection Handling**
+   - Rapid port binding
+   - Graceful port conflict resolution
+   - Minimal startup time impact
 
 ### Backend Performance
 
@@ -177,6 +208,10 @@ This portfolio website is built as a full-stack application with a modern archit
 2. Query optimization
 3. Response compression
 4. Caching layers
+5. **Port Configuration Optimization**
+   - Minimal performance penalty for dynamic port selection
+   - Efficient socket management
+   - Quick port availability checks
 
 ### Database Optimization
 

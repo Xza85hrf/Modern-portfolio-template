@@ -63,7 +63,7 @@ See the [Deployment Guide](DEPLOYMENT.md) for detailed setup and deployment inst
    - Use Shadcn components when available
 
    ```tsx
-   import { Button } from "@/components/ui/button";
+   import { Button } from "'components/ui/button"'
    
    <Button variant="outline" size="sm">
      Click me
@@ -131,8 +131,18 @@ See the [Deployment Guide](DEPLOYMENT.md) for detailed setup and deployment inst
 1. **Starting Development**
 
    ```bash
+   # Start with default port (5000)
    npm run dev
+
+   # Start with a specific port
+   PORT=3000 npm run dev
    ```
+
+   **Port Configuration Notes:**
+   - Default development port is 5000
+   - Can be configured via `PORT` environment variable
+   - Server automatically finds next available port if specified port is in use
+   - Check server logs to confirm the exact port being used
 
 2. **Making Changes**
    - Create feature branch

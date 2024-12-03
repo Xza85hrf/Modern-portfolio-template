@@ -65,6 +65,9 @@ PGHOST=your_db_host
 PGPORT=your_db_port
 PGDATABASE=your_db_name
 
+# Port Configuration (Optional)
+PORT=5000  # Specify custom port for deployment
+
 # GitHub Integration (Optional)
 GITHUB_TOKEN=your_github_token
 
@@ -72,6 +75,13 @@ GITHUB_TOKEN=your_github_token
 JWT_SECRET=your_jwt_secret
 COOKIE_SECRET=your_cookie_secret
 ```
+
+### Port Configuration
+
+- Default port is 5000
+- Can be customized using `PORT` environment variable
+- Server automatically finds next available port if specified port is in use
+- Useful for avoiding port conflicts in different environments
 
 ## Initial Setup
 
@@ -95,6 +105,7 @@ COOKIE_SECRET=your_cookie_secret
    - Fill in all required environment variables
    - Ensure database credentials are correct
    - Generate secure values for JWT_SECRET and COOKIE_SECRET
+   - (Optional) Set custom PORT if needed
 
 4. Initialize the database:
 
@@ -113,12 +124,15 @@ COOKIE_SECRET=your_cookie_secret
 6. Start the production server:
 
    ```bash
-   # Start the application on port 5000
+   # Start the application on default or specified port
    npm start
+
+   # Or specify a custom port
+   PORT=3000 npm start
    ```
 
 7. Verify the installation:
-   - Access the application at <http://localhost:5000>
+   - Access the application at <http://localhost:PORT>
    - Confirm database connectivity
    - Test admin dashboard access
    - Verify GitHub integration (if configured)
