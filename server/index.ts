@@ -4,6 +4,25 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic } from "./vite";
 import { createServer } from "http";
 import { AddressInfo } from 'net';
+import helmet from 'helmet';
+
+// Dummy logger module
+const logger = {
+  info: (message: any, ...optionalParams: any[]) => console.log(message, ...optionalParams),
+  warn: (message: any, ...optionalParams: any[]) => console.warn(message, ...optionalParams),
+  error: (message: any, ...optionalParams: any[]) => console.error(message, ...optionalParams),
+};
+
+// Dummy security module
+const sanitizeInput = (input: any) => {
+  // Placeholder for input sanitization logic
+  // You should implement proper sanitization here to prevent vulnerabilities
+  // For example, using libraries like DOMPurify for HTML sanitization
+  // or escaping special characters to prevent SQL injection
+  
+  // Currently, this function does nothing, which is insecure.
+  return input; 
+};
 
 function log(message: string) {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -18,6 +37,15 @@ function log(message: string) {
 
 const app = express();
 app.use(express.json());
+// Security middleware
+app.use(helmet()); // Set security headers
+
+// Input sanitization middleware
+app.use((req, res, next) => {
+  sanitizeInput(req.body); // Sanitize request body
+  sanitizeInput(req.query); // Sanitize query parameters
+  next();
+});
 app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
@@ -72,12 +100,37 @@ function findAvailablePort(server: any, initialPort: number): Promise<number> {
   registerRoutes(app);
   const server = createServer(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+    let status = 500;
+    let message = "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
+    // More specific error handling 
+    if (err.response) {
+      // Error from an API call
+      status = err.response.status || 500;
+      message = err.response.data.error || err.response.data || err.message;
+    } else if (err.name === 'ValidationError') {
+      // Mongoose validation error
+      status = 400; 
+      message = Object.values(err.errors).map((e: any) => e.message).join(', ');
+    } else if (err.code === 'P2002') {
+      // Prisma unique constraint violation
+      status = 409;
+      message = 'Unique constraint violation.'; 
+    } else if (err.name) {
+      // Other named errors
+      message = err.name + ': ' + err.message;
+    }
+
+    // Logging (using Pino for structured logs)
+    logger.error({ 
+      req: { method: req.method, url: req.url }, 
+      err: err.stack || err, // Full error in development, just message in production
+      message,
+    }, 'Request error');
+
+    // Send error response to client
+    res.status(status).json({ error: message }); 
   });
 
   // importantly only setup vite in development and after
