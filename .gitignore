@@ -41,3 +41,5 @@ next-env.d.ts
 # Logs
 logs
 *.log
+.idx/dev.nix
+package-lock.json

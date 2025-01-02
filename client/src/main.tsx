@@ -24,14 +24,14 @@ function AppRouter() {
   
   return (
     <Router>
-      <div className="min-h-screen bg-background">
-      <Navigation />
-      <main className="container mx-auto px-4 py-8">
+      <div className="min-h-screen bg-background" role="main">
+      <Navigation aria-label="Main Navigation" />
+      <main className="container mx-auto px-4 py-8"  tabIndex={0}>
         <Switch>
-          <Route path="/" component={Home} />
-          <Route path="/about" component={About} />
-          <Route path="/portfolio" component={Portfolio} />
-          <Route path="/blog" component={Blog} />
+          <Route path="/" component={Home} exact />
+          <Route path="/about" component={About} exact />
+          <Route path="/portfolio" component={Portfolio} exact />
+          <Route path="/blog" component={Blog} exact />
           <Route path="/blog/:slug" component={BlogPost} />
           <Route path="/contact" component={Contact} />
           <Route path="/admin/*" component={Admin} />
