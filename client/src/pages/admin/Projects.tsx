@@ -166,7 +166,7 @@ export default function Projects() {
       title: project.title,
       description: project.description,
       image: project.image,
-      technologies: project.technologies ? project.technologies.split(",") : [],
+      technologies: project.technologies || [],
       link: project.link ?? null,
       githubLink: project.githubLink ?? null,
     });
@@ -442,12 +442,7 @@ export default function Projects() {
                     {project.description}
                   </p>
                   <div className="flex gap-2 flex-wrap">
-                    {(Array.isArray(project.technologies)
-                      ? project.technologies
-                      : project.technologies
-                        ? project.technologies.split(",")
-                        : []
-                    ).map((tech: string) => (
+                    {project.technologies?.map((tech: string) => (
                       <span
                         key={tech}
                         className="text-xs bg-muted px-2 py-1 rounded"

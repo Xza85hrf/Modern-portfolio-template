@@ -43,12 +43,18 @@ export const messages = pgTable("messages", {
 export const insertProjectSchema = createInsertSchema(projects);
 export const selectProjectSchema = createSelectSchema(projects);
 export type InsertProject = z.infer<typeof insertProjectSchema>;
-export type Project = z.infer<typeof selectProjectSchema>;
+// Explicitly type technologies as array (drizzle-zod doesn't infer array types correctly)
+export type Project = Omit<z.infer<typeof selectProjectSchema>, 'technologies'> & {
+  technologies: string[];
+};
 
 export const insertPostSchema = createInsertSchema(posts);
 export const selectPostSchema = createSelectSchema(posts);
 export type InsertPost = z.infer<typeof insertPostSchema>;
-export type Post = z.infer<typeof selectPostSchema>;
+// Explicitly type tags as array (drizzle-zod doesn't infer array types correctly)
+export type Post = Omit<z.infer<typeof selectPostSchema>, 'tags'> & {
+  tags: string[] | null;
+};
 
 export const insertSkillSchema = createInsertSchema(skills);
 export const selectSkillSchema = createSelectSchema(skills);

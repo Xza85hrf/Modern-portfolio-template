@@ -19,6 +19,32 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separate heavy animation libraries
+          "framer-motion": ["framer-motion"],
+          "gsap": ["gsap", "@gsap/react"],
+          // Separate particle system
+          "particles": ["@tsparticles/react", "@tsparticles/slim", "@tsparticles/engine"],
+          // Group Radix UI components
+          "radix": [
+            "@radix-ui/react-accordion",
+            "@radix-ui/react-alert-dialog",
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-popover",
+            "@radix-ui/react-select",
+            "@radix-ui/react-tabs",
+            "@radix-ui/react-tooltip",
+          ],
+          // Separate TipTap editor (loaded only in admin)
+          "editor": ["@tiptap/react", "@tiptap/starter-kit", "@tiptap/extension-image"],
+          // Separate charting library
+          "charts": ["recharts"],
+        },
+      },
+    },
   },
   server: {
     host: "0.0.0.0",

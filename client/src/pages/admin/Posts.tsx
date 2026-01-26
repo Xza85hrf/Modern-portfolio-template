@@ -165,7 +165,7 @@ export default function Posts() {
       title: post.title,
       content: post.content as JSONContent,
       slug: post.slug,
-      tags: post.tags ? post.tags.split(',') : [],
+      tags: post.tags || [],
     });
   };
 
@@ -353,7 +353,7 @@ export default function Posts() {
                     Slug: {post.slug}
                   </p>
                   <div className="flex gap-2 flex-wrap">
-                    {post.tags && post.tags.split(',').map((tag: string, index: number) => (
+                    {post.tags?.map((tag: string, index: number) => (
                       <span key={`${post.id}-${tag}-${index}`} className="text-xs bg-muted px-2 py-1 rounded">
                         {tag}
                       </span>
