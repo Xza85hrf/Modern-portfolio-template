@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
-import { Briefcase, GraduationCap, Award, Rocket } from "lucide-react";
-import { GlassCard } from "@/components/layout/GlassCard";
+import { Code2, GraduationCap, Users, Rocket, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
@@ -8,7 +7,7 @@ interface TimelineEvent {
   year: string;
   title: string;
   description: string;
-  type: "work" | "education" | "achievement" | "milestone";
+  type: "leadership" | "development" | "education" | "milestone";
 }
 
 interface JourneyTimelineProps {
@@ -21,13 +20,13 @@ const defaultEvents: TimelineEvent[] = [
     year: "2024",
     title: "Senior Developer",
     description: "Leading development of enterprise applications and mentoring junior developers.",
-    type: "work",
+    type: "leadership",
   },
   {
     year: "2022",
     title: "Full Stack Developer",
     description: "Built scalable web applications using React, Node.js, and PostgreSQL.",
-    type: "work",
+    type: "development",
   },
   {
     year: "2020",
@@ -44,28 +43,44 @@ const defaultEvents: TimelineEvent[] = [
 ];
 
 const iconMap = {
-  work: Briefcase,
+  leadership: Users,
+  development: Code2,
   education: GraduationCap,
-  achievement: Award,
   milestone: Rocket,
 };
 
-const colorMap = {
-  work: "bg-primary/20 text-primary border-primary/30",
-  education: "bg-secondary/20 text-secondary border-secondary/30",
-  achievement: "bg-accent/20 text-accent border-accent/30",
-  milestone: "bg-chart-4/20 text-chart-4 border-chart-4/30",
+const gradientMap = {
+  leadership: "from-primary to-primary/50",
+  development: "from-accent to-accent/50",
+  education: "from-secondary to-secondary/50",
+  milestone: "from-chart-4 to-chart-4/50",
+};
+
+const glowMap = {
+  leadership: "shadow-primary/50",
+  development: "shadow-accent/50",
+  education: "shadow-secondary/50",
+  milestone: "shadow-chart-4/50",
 };
 
 export function JourneyTimeline({ events = defaultEvents }: JourneyTimelineProps) {
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <div className="relative">
-      {/* Timeline line */}
-      <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-primary via-accent to-secondary opacity-30" />
+    <div className="relative max-w-4xl mx-auto">
+      {/* Animated gradient line */}
+      <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-0.5 md:-translate-x-px">
+        <motion.div
+          className="h-full w-full bg-gradient-to-b from-primary via-accent to-secondary"
+          initial={{ scaleY: 0, opacity: 0 }}
+          whileInView={{ scaleY: 1, opacity: 0.5 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          style={{ transformOrigin: "top" }}
+        />
+      </div>
 
-      <div className="space-y-12">
+      <div className="space-y-16">
         {events.map((event, index) => {
           const Icon = iconMap[event.type];
           const isLeft = index % 2 === 0;
@@ -73,77 +88,26 @@ export function JourneyTimeline({ events = defaultEvents }: JourneyTimelineProps
           return (
             <motion.div
               key={`${event.year}-${event.title}`}
-              className={cn(
-                "relative grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8",
-                isLeft ? "md:text-right" : "md:text-left"
-              )}
-              initial={{
-                opacity: 0,
-                x: prefersReducedMotion ? 0 : isLeft ? -50 : 50,
-              }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
+              className="relative"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
               transition={{
                 duration: prefersReducedMotion ? 0 : 0.6,
-                delay: index * 0.1,
+                delay: index * 0.15,
               }}
             >
-              {/* Content - Order changes based on side */}
-              <div
-                className={cn(
-                  "md:contents",
-                  !isLeft && "md:col-start-2"
-                )}
-              >
-                {/* Left side content or spacer */}
-                <div className={cn("pl-16 md:pl-0", isLeft ? "order-1" : "order-2 md:order-1")}>
-                  {isLeft ? (
-                    <GlassCard
-                      variant="bordered"
-                      hover
-                      className="p-6 h-full"
-                    >
-                      <span className="text-sm text-muted-foreground mb-2 block">
-                        {event.year}
-                      </span>
-                      <h3 className="text-lg font-semibold mb-2">{event.title}</h3>
-                      <p className="text-muted-foreground text-sm">
-                        {event.description}
-                      </p>
-                    </GlassCard>
-                  ) : (
-                    <div className="hidden md:block" />
-                  )}
-                </div>
-
-                {/* Right side content or spacer */}
-                <div className={cn("pl-16 md:pl-0", isLeft ? "order-2 hidden md:block" : "order-1 md:order-2")}>
-                  {!isLeft ? (
-                    <GlassCard
-                      variant="bordered"
-                      hover
-                      className="p-6 h-full"
-                    >
-                      <span className="text-sm text-muted-foreground mb-2 block">
-                        {event.year}
-                      </span>
-                      <h3 className="text-lg font-semibold mb-2">{event.title}</h3>
-                      <p className="text-muted-foreground text-sm">
-                        {event.description}
-                      </p>
-                    </GlassCard>
-                  ) : (
-                    <div className="hidden md:block" />
-                  )}
-                </div>
-              </div>
-
-              {/* Center icon */}
+              {/* Icon node */}
               <motion.div
                 className={cn(
-                  "absolute left-0 md:left-1/2 top-6 -translate-x-0 md:-translate-x-1/2",
-                  "w-12 h-12 rounded-full flex items-center justify-center border-2",
-                  colorMap[event.type]
+                  "absolute left-8 md:left-1/2 top-0 -translate-x-1/2 z-20",
+                  "w-14 h-14 rounded-full",
+                  "bg-gradient-to-br",
+                  gradientMap[event.type],
+                  "flex items-center justify-center",
+                  "shadow-lg",
+                  glowMap[event.type],
+                  "border-4 border-background"
                 )}
                 initial={{ scale: 0 }}
                 whileInView={{ scale: 1 }}
@@ -152,25 +116,149 @@ export function JourneyTimeline({ events = defaultEvents }: JourneyTimelineProps
                   type: "spring",
                   stiffness: 300,
                   damping: 20,
-                  delay: index * 0.1 + 0.2,
+                  delay: index * 0.15 + 0.2,
                 }}
+                whileHover={
+                  prefersReducedMotion
+                    ? {}
+                    : { scale: 1.1 }
+                }
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-6 h-6 text-white" />
               </motion.div>
+
+              {/* Content wrapper */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Mobile: always show card on right of icon */}
+                <div className="md:hidden pl-20 pr-4">
+                  <TimelineCard event={event} prefersReducedMotion={prefersReducedMotion} />
+                </div>
+
+                {/* Desktop: alternating layout */}
+                {/* Left column */}
+                <div className={cn(
+                  "hidden md:block",
+                  isLeft ? "pr-16 text-right" : ""
+                )}>
+                  {isLeft && (
+                    <TimelineCard
+                      event={event}
+                      align="right"
+                      prefersReducedMotion={prefersReducedMotion}
+                    />
+                  )}
+                </div>
+
+                {/* Right column */}
+                <div className={cn(
+                  "hidden md:block",
+                  !isLeft ? "pl-16" : ""
+                )}>
+                  {!isLeft && (
+                    <TimelineCard
+                      event={event}
+                      align="left"
+                      prefersReducedMotion={prefersReducedMotion}
+                    />
+                  )}
+                </div>
+              </div>
             </motion.div>
           );
         })}
       </div>
 
-      {/* End decoration */}
+      {/* End node */}
       <motion.div
-        className="absolute left-6 md:left-1/2 bottom-0 -translate-x-1/2 w-4 h-4 rounded-full bg-gradient-to-r from-primary to-accent"
-        initial={{ scale: 0, opacity: 0 }}
-        whileInView={{ scale: 1, opacity: 1 }}
+        className="absolute left-8 md:left-1/2 -bottom-4 -translate-x-1/2"
+        initial={{ scale: 0 }}
+        whileInView={{ scale: 1 }}
         viewport={{ once: true }}
-        transition={{ delay: events.length * 0.1 + 0.3 }}
-      />
+        transition={{ delay: events.length * 0.15 + 0.3 }}
+      >
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary via-accent to-secondary flex items-center justify-center">
+          <div className="w-3 h-3 rounded-full bg-background" />
+        </div>
+      </motion.div>
     </div>
+  );
+}
+
+interface TimelineCardProps {
+  event: TimelineEvent;
+  align?: "left" | "right";
+  prefersReducedMotion: boolean;
+}
+
+function TimelineCard({ event, align = "left", prefersReducedMotion }: TimelineCardProps) {
+  return (
+    <motion.div
+      className={cn(
+        "group relative p-6 rounded-2xl",
+        "bg-card/50 backdrop-blur-sm",
+        "border border-border/50",
+        "hover:border-primary/30 transition-colors duration-300",
+        "overflow-hidden"
+      )}
+      whileHover={
+        prefersReducedMotion
+          ? {}
+          : { y: -5, transition: { duration: 0.2 } }
+      }
+    >
+      {/* Gradient overlay on hover */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+      {/* Decorative corner accent */}
+      <div className={cn(
+        "absolute top-0 w-20 h-20 opacity-20",
+        align === "right" ? "right-0" : "left-0"
+      )}>
+        <div className={cn(
+          "absolute w-full h-full bg-gradient-to-br from-primary/30 to-transparent",
+          align === "right" ? "rounded-bl-full" : "rounded-br-full"
+        )} />
+      </div>
+
+      <div className={cn("relative z-10", align === "right" && "md:text-right")}>
+        {/* Year badge */}
+        <motion.span
+          className={cn(
+            "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium mb-3",
+            "bg-primary/10 text-primary border border-primary/20"
+          )}
+          initial={{ opacity: 0, scale: 0.8 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.3 }}
+        >
+          <Calendar className="w-3 h-3" />
+          {event.year}
+        </motion.span>
+
+        {/* Title */}
+        <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
+          {event.title}
+        </h3>
+
+        {/* Description */}
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          {event.description}
+        </p>
+
+        {/* Bottom accent line */}
+        <motion.div
+          className={cn(
+            "absolute bottom-0 h-0.5 bg-gradient-to-r from-primary to-accent",
+            align === "right" ? "right-0" : "left-0"
+          )}
+          initial={{ width: 0 }}
+          whileInView={{ width: "30%" }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+        />
+      </div>
+    </motion.div>
   );
 }
 
