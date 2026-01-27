@@ -4,10 +4,14 @@
   "outputDirectory": "dist",
   "installCommand": "npm install --include=dev",
   "framework": null,
-    "rewrites": [
+  "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "/api"
+    },
+    {
+      "source": "/((?!api|assets|favicon).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [

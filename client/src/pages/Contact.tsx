@@ -3,7 +3,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Mail, MapPin, Github, Linkedin, Send } from "lucide-react";
+import { Mail, MapPin, Linkedin, Send } from "lucide-react";
+import { AnimatedGithubIcon } from "@/components/ui/AnimatedGithubIcon";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { AnimatedSection, StaggerContainer, StaggerItem } from "@/components/layout/AnimatedPage";
@@ -28,7 +29,6 @@ const contactInfo = [
 ];
 
 const socialLinks = [
-  { icon: Github, label: "GitHub", href: "https://github.com/Xza85hrf" },
   { icon: Linkedin, label: "LinkedIn", href: "https://www.linkedin.com/in/ravindu-s-ab7914329/" },
 ];
 
@@ -233,6 +233,15 @@ export default function Contact() {
             <GlassCard variant="default" className="p-6">
               <h3 className="text-lg font-semibold mb-4">Follow Me</h3>
               <div className="flex gap-3">
+                {/* Animated GitHub Icon */}
+                <motion.div
+                  className="w-12 h-12 rounded-lg bg-muted/50 flex items-center justify-center hover:bg-primary/10 transition-all duration-300"
+                  whileHover={prefersReducedMotion ? {} : { scale: 1.1, y: -2 }}
+                  whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
+                >
+                  <AnimatedGithubIcon size={28} playOnHover={true} />
+                </motion.div>
+                {/* Other Social Links */}
                 {socialLinks.map((social) => (
                   <motion.a
                     key={social.label}
