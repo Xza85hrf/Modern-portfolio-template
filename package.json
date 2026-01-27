@@ -58,7 +58,7 @@
     "@tsparticles/react": "^3.0.0",
     "@tsparticles/slim": "^3.9.1",
     "@types/pg": "^8.11.10",
-    "bcrypt": "^5.1.1",
+    "bcrypt": "^6.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
@@ -120,7 +120,7 @@
     "@types/react-dom": "^18.3.1",
     "@types/ws": "^8.5.10",
     "concurrently": "^8.2.2",
-    "drizzle-kit": "^0.31.6",
+    "drizzle-kit": "^0.31.8",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^9.1.0",
     "glob": "^10.3.10",
@@ -129,6 +129,6 @@
     "tsx": "^4.20.6"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "20.x"
   }
 }
