@@ -20,12 +20,22 @@ export default defineConfig({
     outDir: "../dist",  // Relative to root (client/), outputs to project root /dist
     emptyOutDir: true,
     sourcemap: process.env.NODE_ENV !== 'production', // Disable source maps in production
+    chunkSizeWarningLimit: 600, // Increase limit to 600KB (default is 500KB)
     rollupOptions: {
+      // Suppress eval warning from lottie-web (known issue, safe in this context)
+      onwarn(warning, warn) {
+        if (warning.code === 'EVAL' && warning.id?.includes('lottie-web')) {
+          return; // Suppress lottie-web eval warnings
+        }
+        warn(warning);
+      },
       output: {
         manualChunks: {
           // Separate heavy animation libraries
           "framer-motion": ["framer-motion"],
           "gsap": ["gsap", "@gsap/react"],
+          // Separate Lottie animation library
+          "lottie": ["lottie-react", "lottie-web"],
           // Separate particle system
           "particles": ["@tsparticles/react", "@tsparticles/slim", "@tsparticles/engine"],
           // Group Radix UI components
