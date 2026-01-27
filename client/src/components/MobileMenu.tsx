@@ -5,6 +5,7 @@ import { X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { menuVariants, menuItemVariants, backdropVariants } from "@/lib/animations";
+import { AnimatedGithubIcon } from "./ui/AnimatedGithubIcon";
 
 interface NavItem {
   href: string;
@@ -119,9 +120,19 @@ export function MobileMenu({ isOpen, onClose, navItems }: MobileMenuProps) {
               </motion.ul>
             </nav>
 
-            {/* Footer decoration */}
+            {/* Footer with GitHub & CTA */}
             <div className="absolute bottom-0 left-0 right-0 p-6">
               <div className="h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent mb-4" />
+              <div className="flex items-center justify-center gap-4 mb-3">
+                <AnimatedGithubIcon size={32} playOnHover={false} />
+                <Link
+                  href="/contact"
+                  onClick={onClose}
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 bg-primary/90 hover:bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                >
+                  Let's Talk
+                </Link>
+              </div>
               <p className="text-center text-xs text-muted-foreground">
                 Crafting digital experiences
               </p>

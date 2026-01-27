@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Menu, Sparkles } from "lucide-react";
 import { MobileMenu } from "./MobileMenu";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { AnimatedGithubIcon } from "./ui/AnimatedGithubIcon";
 
 const navItems = [
   { href: "/", label: "Home" },
@@ -163,8 +164,9 @@ export default function Navigation() {
               ))}
             </div>
 
-            {/* CTA Button - Desktop */}
-            <div className="hidden md:block">
+            {/* CTA Button & GitHub - Desktop */}
+            <div className="hidden md:flex items-center gap-3">
+              <AnimatedGithubIcon size={28} playOnHover={true} />
               <motion.div
                 whileHover={{ scale: prefersReducedMotion ? 1 : 1.05 }}
                 whileTap={{ scale: prefersReducedMotion ? 1 : 0.95 }}
