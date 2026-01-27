@@ -1,16 +1,10 @@
 {
   "version": 2,
-  "buildCommand": "npm run build:client",
-  "outputDirectory": "build",
+  "buildCommand": "npm run build:api && npm run build:client",
+  "outputDirectory": "dist",
   "installCommand": "npm install --include=dev",
   "framework": null,
-  "functions": {
-    "api/index.ts": {
-      "runtime": "@vercel/node@3.0.0",
-      "maxDuration": 30
-    }
-  },
-  "rewrites": [
+    "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "/api"

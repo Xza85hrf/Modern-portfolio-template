@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "concurrently \"vite --config vite.config.ts\" \"tsx watch server/index.ts\"",
     "build": "npm run clean && npm run build:client && npm run build:server",
-    "build:client": "vite build --outDir build",
+    "build:client": "vite build",
+    "build:api": "node esbuild-api.config.js",
     "build:server": "node esbuild.config.js",
     "start": "NODE_ENV=production node dist/server/index.js",
     "check": "tsc",

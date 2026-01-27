@@ -17,7 +17,7 @@ export default defineConfig({
   },
   root: path.resolve(__dirname, "client"),
   build: {
-    outDir: path.resolve(__dirname, "build"),
+    outDir: "../dist",  // Relative to root (client/), outputs to project root /dist
     emptyOutDir: true,
     sourcemap: process.env.NODE_ENV !== 'production', // Disable source maps in production
     rollupOptions: {

@@ -29,7 +29,7 @@ const contactInfo = [
 
 const socialLinks = [
   { icon: Github, label: "GitHub", href: "https://github.com/Xza85hrf" },
-  { icon: Linkedin, label: "LinkedIn", href: "https://www.linkedin.com/in/ravindu-samarappulige-90a752259" },
+  { icon: Linkedin, label: "LinkedIn", href: "https://www.linkedin.com/in/ravindu-s-ab7914329/" },
 ];
 
 export default function Contact() {

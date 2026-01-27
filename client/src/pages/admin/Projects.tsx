@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type Project, insertProjectSchema } from "@db/schema";
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Github, RefreshCw, Wand2, ImageIcon } from "lucide-react";
+import { Github, RefreshCw, Wand2, ImageIcon, Pencil, Check, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +44,17 @@ export default function Projects() {
   const queryClient = useQueryClient();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [regeneratingId, setRegeneratingId] = useState<number | null>(null);
+  const [inlineEditId, setInlineEditId] = useState<number | null>(null);
+  const [inlineEditTitle, setInlineEditTitle] = useState("");
+  const inlineInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus input when inline editing starts
+  useEffect(() => {
+    if (inlineEditId && inlineInputRef.current) {
+      inlineInputRef.current.focus();
+      inlineInputRef.current.select();
+    }
+  }, [inlineEditId]);
 
   const { data: projects, isLoading } = useQuery<Project[]>({
     queryKey: ["projects"],
@@ -75,8 +86,6 @@ export default function Projects() {
         technologies:
           data.technologies.length > 0 ? data.technologies.join(",") : "",
         metadata: {},
-        createdAt: new Date(),
-        updatedAt: new Date(),
       });
     },
     onSuccess: () => {
@@ -123,7 +132,6 @@ export default function Projects() {
         technologies:
           data.technologies.length > 0 ? data.technologies.join(",") : "",
         metadata: data.metadata || {},
-        updatedAt: new Date(),
       });
     },
     onSuccess: () => {
@@ -210,6 +218,45 @@ export default function Projects() {
       });
     },
   });
+
+  // Inline title update mutation
+  const inlineTitleMutation = useMutation({
+    mutationFn: async ({ id, title }: { id: number; title: string }) => {
+      return apiPut(`/api/projects/${id}`, { title });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast({
+        title: "Title updated",
+        description: "Project title has been updated successfully.",
+      });
+      setInlineEditId(null);
+      setInlineEditTitle("");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update title. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleInlineEditStart = (project: Project) => {
+    setInlineEditId(project.id);
+    setInlineEditTitle(project.title);
+  };
+
+  const handleInlineEditSave = () => {
+    if (inlineEditId && inlineEditTitle.trim()) {
+      inlineTitleMutation.mutate({ id: inlineEditId, title: inlineEditTitle.trim() });
+    }
+  };
+
+  const handleInlineEditCancel = () => {
+    setInlineEditId(null);
+    setInlineEditTitle("");
+  };
 
   const handleDelete = (id: number) => {
     deleteMutation.mutate(id);
@@ -451,15 +498,61 @@ export default function Projects() {
                   key={project.id}
                   className="p-4 border rounded-lg space-y-2"
                 >
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">{project.title}</h4>
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between gap-4">
+                    {/* Inline Title Editing */}
+                    {inlineEditId === project.id ? (
+                      <div className="flex items-center gap-2 flex-1">
+                        <input
+                          ref={inlineInputRef}
+                          type="text"
+                          value={inlineEditTitle}
+                          onChange={(e) => setInlineEditTitle(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleInlineEditSave();
+                            if (e.key === "Escape") handleInlineEditCancel();
+                          }}
+                          className="flex-1 px-3 py-1.5 text-sm font-medium border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                          placeholder="Enter title with Polish characters (ą, ę, ć, ł...)"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleInlineEditSave}
+                          disabled={inlineTitleMutation.isPending}
+                          className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                        >
+                          <Check className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleInlineEditCancel}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <h4 className="font-medium truncate">{project.title}</h4>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleInlineEditStart(project)}
+                          className="h-7 w-7 p-0 text-muted-foreground hover:text-primary shrink-0"
+                          title="Quick edit title (for Polish characters)"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 shrink-0">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleEdit(project)}
                       >
-                        Edit
+                        Edit All
                       </Button>
                       <Button
                         variant="outline"

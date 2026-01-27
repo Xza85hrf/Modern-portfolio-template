@@ -9,6 +9,17 @@ import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 import logger from './lib/logger';
 
+// Global error handlers to prevent server crashes
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception - Server will continue running:', error);
+  // Don't exit - let the server continue
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection:', { reason, promise });
+  // Don't exit - let the server continue
+});
+
 function log(message: string) {
   if (process.env.NODE_ENV === 'production') return;
 
@@ -67,6 +78,12 @@ app.use('/api/auth/', authLimiter);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false }));
+
+// Ensure UTF-8 encoding for all JSON responses (Polish character support)
+app.use((req, res, next) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  next();
+});
 
 app.use((req, res, next) => {
   const start = Date.now();

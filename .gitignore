@@ -47,3 +47,12 @@ package-lock.json
 .env.production.credentials
 .mcp.json
 build
+
+.vercel
+.env*.local
+portable-kit/.mcp.json
+
+# Sensitive files - CV/Resume
+CV/
+resume.pdf
+*.cv.pdf
