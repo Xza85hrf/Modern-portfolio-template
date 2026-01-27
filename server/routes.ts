@@ -8,7 +8,7 @@ import { generateToken, authMiddleware } from './lib/auth';
 import { validateRequest, formatValidationErrors, projectSchema, messageSchema, commentSchema, postSchema, skillSchema, loginSchema, pageviewSchema } from './lib/validation';
 import logger from './lib/logger';
 import { db } from "../db";
-import { projects, posts, skills, messages, adminUsers, comments, analytics } from "@db/schema";
+import { projects, posts, skills, messages, adminUsers, comments, analytics } from "../db/schema";
 import { eq, and } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
