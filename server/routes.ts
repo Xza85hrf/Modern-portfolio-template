@@ -6,6 +6,7 @@ import { extractRepoInfo, getRepositoryInfo, getAllPublicRepos, repoToProject, g
 import { generateProjectImage, isImageGenerationAvailable } from './lib/image-generation';
 import { generateToken, authMiddleware } from './lib/auth';
 import { validateRequest, formatValidationErrors, projectSchema, messageSchema, commentSchema, postSchema, skillSchema, loginSchema, pageviewSchema } from './lib/validation';
+import { withRetry, safeQuery } from './lib/db-utils';
 import logger from './lib/logger';
 import { db } from "../db";
 import { projects, posts, skills, messages, adminUsers, comments, analytics } from "../db/schema";
@@ -27,20 +28,27 @@ async function ensureAdminUser() {
   }
 
   try {
-    const existingAdmin = await db.query.adminUsers.findFirst({
-      where: eq(adminUsers.username, 'admin')
-    });
+    const existingAdmin = await withRetry(
+      () => db.query.adminUsers.findFirst({
+        where: eq(adminUsers.username, 'admin')
+      }),
+      { operationName: 'Check admin user', maxRetries: 5, delayMs: 2000 }
+    );
 
     if (!existingAdmin && adminPassword) {
       const hashedPassword = await bcrypt.hash(adminPassword, 12);
-      await db.insert(adminUsers).values({
-        username: 'admin',
-        password_hash: hashedPassword,
-      });
+      await withRetry(
+        () => db.insert(adminUsers).values({
+          username: 'admin',
+          password_hash: hashedPassword,
+        }),
+        { operationName: 'Create admin user' }
+      );
       logger.info('Admin user created successfully');
     }
   } catch (error) {
-    logger.error('Error ensuring admin user:', error);
+    logger.error('Error ensuring admin user (will retry on next request):', error);
+    // Don't crash - the server can still function, admin creation will be retried
   }
 }
 
@@ -51,9 +59,12 @@ export function registerRoutes(app: Express) {
   // Projects routes
   app.get("/api/projects", async (req, res) => {
     try {
-      const allProjects = await db.query.projects.findMany({
-        orderBy: (projects, { desc }) => [desc(projects.createdAt)],
-      });
+      const allProjects = await withRetry(
+        () => db.query.projects.findMany({
+          orderBy: (projects, { desc }) => [desc(projects.createdAt)],
+        }),
+        { operationName: 'Fetch projects' }
+      );
       res.json(allProjects);
     } catch (error) {
       logger.error("Error fetching projects:", error);
@@ -77,10 +88,14 @@ export function registerRoutes(app: Express) {
 
   app.put("/api/projects/:id", authMiddleware, async (req, res) => {
     try {
-      const { id, createdAt, ...updateData } = req.body;
+      // Remove fields that shouldn't be updated directly
+      const { id, createdAt, updatedAt, ...updateData } = req.body;
       const result = await db
         .update(projects)
-        .set(updateData)
+        .set({
+          ...updateData,
+          updatedAt: new Date(), // Always set server-side
+        })
         .where(eq(projects.id, parseInt(req.params.id)))
         .returning();
       res.json(result[0]);
@@ -105,10 +120,18 @@ export function registerRoutes(app: Express) {
 
   // Blog posts routes
   app.get("/api/posts", async (req, res) => {
-    const allPosts = await db.query.posts.findMany({
-      orderBy: (posts, { desc }) => [desc(posts.createdAt)],
-    });
-    res.json(allPosts);
+    try {
+      const allPosts = await withRetry(
+        () => db.query.posts.findMany({
+          orderBy: (posts, { desc }) => [desc(posts.createdAt)],
+        }),
+        { operationName: 'Fetch posts' }
+      );
+      res.json(allPosts);
+    } catch (error) {
+      logger.error("Error fetching posts:", error);
+      res.status(500).json({ message: "Failed to fetch posts" });
+    }
   });
 
   app.get("/api/posts/:slug", async (req, res) => {
@@ -142,10 +165,18 @@ export function registerRoutes(app: Express) {
 
   // Skills routes
   app.get("/api/skills", async (req, res) => {
-    const allSkills = await db.query.skills.findMany({
-      orderBy: (skills, { desc }) => [desc(skills.proficiency)],
-    });
-    res.json(allSkills);
+    try {
+      const allSkills = await withRetry(
+        () => db.query.skills.findMany({
+          orderBy: (skills, { desc }) => [desc(skills.proficiency)],
+        }),
+        { operationName: 'Fetch skills' }
+      );
+      res.json(allSkills);
+    } catch (error) {
+      logger.error("Error fetching skills:", error);
+      res.status(500).json({ message: "Failed to fetch skills" });
+    }
   });
 
   app.post("/api/skills", authMiddleware, async (req, res) => {
@@ -678,9 +709,12 @@ export function registerRoutes(app: Express) {
   app.get("/api/analytics", authMiddleware, async (req, res) => {
     try {
       // Get analytics data excluding admin routes
-      const allPageViews = await db.query.analytics.findMany({
-        orderBy: (analytics, { desc }) => [desc(analytics.viewCount)],
-      });
+      const allPageViews = await withRetry(
+        () => db.query.analytics.findMany({
+          orderBy: (analytics, { desc }) => [desc(analytics.viewCount)],
+        }),
+        { operationName: 'Fetch analytics' }
+      );
 
       // Filter out admin routes
       const pageViews = allPageViews.filter(page => !page.pagePath.startsWith('/admin'));

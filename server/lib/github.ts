@@ -160,9 +160,12 @@ export function repoToProject(repo: GitHubRepo, owner: string = GITHUB_USERNAME)
 
 /**
  * Format repo name to a readable title (e.g., "my-cool-project" -> "My Cool Project")
+ * Unicode-aware to properly handle Polish and other non-ASCII characters
  */
 function formatRepoName(name: string): string {
   return name
     .replace(/[-_]/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+    .split(" ")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }

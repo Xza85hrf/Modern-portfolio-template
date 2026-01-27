@@ -1,19 +1,22 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { ArrowRight, Github, ExternalLink } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { ParticleBackground, StarBackground } from "@/components/home/ParticleBackground";
 import { HeroContent } from "@/components/home/HeroContent";
 import { Hero3D } from "@/components/home/Hero3D";
 import { ServiceCards } from "@/components/home/ServiceCards";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { AnimatedSection, StaggerContainer, StaggerItem } from "@/components/layout/AnimatedPage";
-import { TiltCard } from "@/components/3d/TiltCard";
+import { ProjectCard3D } from "@/components/portfolio/ProjectCard3D";
+import { ProjectModal } from "@/components/portfolio/ProjectModal";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import type { Project } from "@db/schema";
 
 export default function Home() {
   const prefersReducedMotion = useReducedMotion();
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   // Fetch featured projects
   const { data: projects } = useQuery<Project[]>({
@@ -135,68 +138,10 @@ export default function Home() {
             <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {featuredProjects.map((project) => (
                 <StaggerItem key={project.id}>
-                  <TiltCard tiltAmount={8} className="h-full">
-                    <GlassCard
-                      variant="elevated"
-                      hover={false}
-                      className="h-full flex flex-col overflow-hidden group"
-                    >
-                      {/* Project Image Placeholder */}
-                      <div className="relative h-48 bg-gradient-to-br from-primary/20 via-accent/10 to-secondary/20 overflow-hidden">
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-6xl opacity-20">{project.title.charAt(0)}</span>
-                        </div>
-                        {/* Hover overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      </div>
-
-                      {/* Content */}
-                      <div className="p-6 flex flex-col flex-grow">
-                        <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
-                          {project.title}
-                        </h3>
-                        <p className="text-muted-foreground text-sm mb-4 flex-grow line-clamp-2">
-                          {project.description}
-                        </p>
-
-                        {/* Tech stack */}
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {project.technologies?.slice(0, 3).map((tech) => (
-                            <span
-                              key={tech}
-                              className="px-2 py-1 text-xs rounded-md bg-muted/50 text-muted-foreground"
-                            >
-                              {tech}
-                            </span>
-                          ))}
-                        </div>
-
-                        {/* Links */}
-                        <div className="flex gap-3">
-                          {project.githubLink && (
-                            <a
-                              href={project.githubLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-muted-foreground hover:text-primary transition-colors"
-                            >
-                              <Github className="h-5 w-5" />
-                            </a>
-                          )}
-                          {project.link && (
-                            <a
-                              href={project.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-muted-foreground hover:text-primary transition-colors"
-                            >
-                              <ExternalLink className="h-5 w-5" />
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </GlassCard>
-                  </TiltCard>
+                  <ProjectCard3D
+                    project={project}
+                    onViewDetails={setSelectedProject}
+                  />
                 </StaggerItem>
               ))}
             </StaggerContainer>
@@ -255,6 +200,13 @@ export default function Home() {
           </GlassCard>
         </div>
       </AnimatedSection>
+
+      {/* Project Detail Modal */}
+      <ProjectModal
+        project={selectedProject}
+        isOpen={selectedProject !== null}
+        onClose={() => setSelectedProject(null)}
+      />
     </div>
   );
 }

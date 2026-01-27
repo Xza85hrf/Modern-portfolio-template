@@ -14,7 +14,7 @@ interface JourneyTimelineProps {
   events?: TimelineEvent[];
 }
 
-// Default timeline events - Ravindu Samarappulige's career journey
+// Default timeline events - Ravindu's career journey
 const defaultEvents: TimelineEvent[] = [
   {
     year: "Oct 2025",

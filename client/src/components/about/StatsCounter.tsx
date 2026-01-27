@@ -20,7 +20,7 @@ interface StatsCounterProps {
 const defaultStats: Stat[] = [
   {
     label: "Years Experience",
-    value: 8,
+    value: 4,
     suffix: "+",
     icon: Zap,
     color: "text-primary",

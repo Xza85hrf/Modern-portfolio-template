@@ -51,3 +51,8 @@ build
 .vercel
 .env*.local
 portable-kit/.mcp.json
+
+# Sensitive files - CV/Resume
+CV/
+resume.pdf
+*.cv.pdf

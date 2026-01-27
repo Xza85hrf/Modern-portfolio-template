@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Download, Mail, MapPin, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Mail, MapPin, Sparkles } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { AnimatedSection, StaggerContainer, StaggerItem } from "@/components/layout/AnimatedPage";
 import { SkillsVisualization } from "@/components/about/SkillsVisualization";
@@ -49,7 +48,7 @@ export default function About() {
                 transition={{ delay: 0.1 }}
               >
                 Hello, I'm{" "}
-                <span className="gradient-text">Ravindu Samarappulige</span>
+                <span className="gradient-text">Ravindu</span>
               </motion.h1>
 
               <motion.p
@@ -82,7 +81,7 @@ export default function About() {
                 </span>
               </motion.div>
 
-              {/* CTA Buttons */}
+              {/* CTA Button */}
               <motion.div
                 className="flex flex-wrap gap-4"
                 initial={{ opacity: 0, y: 20 }}
@@ -93,24 +92,9 @@ export default function About() {
                   whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
                   whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
                 >
-                  <Button asChild className="gap-2">
-                    <a
-                      href="/resume.pdf"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Download className="h-4 w-4" />
-                      Download Resume
-                    </a>
-                  </Button>
-                </motion.div>
-                <motion.div
-                  whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
-                  whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
-                >
                   <Link
                     href="/contact"
-                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 px-4 py-2 glass border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-10 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90"
                   >
                     <Mail className="h-4 w-4" />
                     Get in Touch
