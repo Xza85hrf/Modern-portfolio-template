@@ -474,17 +474,22 @@ export function registerRoutes(app: Express) {
       return res.status(400).json({ message: "Invalid filename format" });
     }
 
+    // Defense in depth: strip any directory components using path.basename
+    const sanitizedFilename = path.basename(filename);
+
     const docsDir = path.resolve(process.cwd(), "docs");
-    const docsPath = path.resolve(docsDir, filename);
+    // Use path.join instead of path.resolve for combining directory and filename
+    const docsPath = path.join(docsDir, sanitizedFilename);
 
     // Ensure the resolved path is still within docs directory
-    if (!docsPath.startsWith(docsDir + path.sep)) {
+    const resolvedPath = path.resolve(docsPath);
+    if (!resolvedPath.startsWith(docsDir + path.sep) && resolvedPath !== docsDir) {
       return res.status(403).json({ message: "Access denied" });
     }
 
     try {
-      if (fs.existsSync(docsPath)) {
-        const content = fs.readFileSync(docsPath, 'utf-8');
+      if (fs.existsSync(resolvedPath)) {
+        const content = fs.readFileSync(resolvedPath, 'utf-8');
         res.type('text/markdown').send(content);
       } else {
         res.status(404).json({ message: "Documentation file not found" });
