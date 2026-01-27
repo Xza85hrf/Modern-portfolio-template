@@ -1,10 +1,9 @@
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import * as schema from "./schema";
-import dotenv from "dotenv";
 
-// Load environment variables
-dotenv.config();
+// In local development, dotenv is loaded by the main entry point
+// In Vercel, environment variables are injected automatically
 
 if (!process.env.DATABASE_URL) {
   console.warn("DATABASE_URL not set - database operations will fail");
