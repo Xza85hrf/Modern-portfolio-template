@@ -25,6 +25,7 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production.credentials
 
 # IDE
 .vscode
@@ -43,3 +44,5 @@ logs
 *.log
 .idx/dev.nix
 package-lock.json
+.env.production.credentials
+.mcp.json

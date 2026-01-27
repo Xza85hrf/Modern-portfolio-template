@@ -7,9 +7,9 @@
 ## Project Overview
 
 **Type:** Full-stack Portfolio Website with Admin Dashboard
-**Stack:** React + TypeScript + Express + PostgreSQL
+**Stack:** React + TypeScript + Express + PostgreSQL + Gemini AI
 **Theme:** Space-inspired dark mode with glassmorphism
-**Status:** Phase 7 (Polish) complete - Ready for deployment
+**Status:** Phase 7 complete - Ready for Phase 8 (Deployment)
 
 ---
 
@@ -106,7 +106,9 @@ npm run build && npm start
 │   ├── routes.ts              # API routes
 │   ├── vite.ts                # Vite middleware
 │   └── 📁 lib/
-│       └── github.ts          # Server-side GitHub
+│       ├── github.ts          # Server-side GitHub
+│       ├── gemini.ts          # Gemini AI image generation
+│       └── image-generation.ts # Image orchestration & prompts
 ├── 📁 db/
 │   ├── schema.ts              # Drizzle schema
 │   ├── index.ts               # DB connection
@@ -117,6 +119,11 @@ npm run build && npm start
 │   ├── DEPLOYMENT.md
 │   ├── DEVELOPMENT_GUIDE.md
 │   └── ADMIN_GUIDE.md
+├── 📁 scripts/                # Utility scripts
+│   ├── test-gemini-image.ts   # Test single image generation
+│   ├── test-new-prompt.ts     # Test prompt generation
+│   ├── regenerate-all-images.ts # Batch regenerate images
+│   └── list-all-models.ts     # List available Gemini models
 └── 📁 .claude/                # Claude configuration
     ├── CLAUDE.md              # Agent instructions
     └── INDEX.md               # This file
@@ -132,6 +139,12 @@ npm run build && npm start
 | `client/src/main.tsx` | React app entry, routing, providers |
 | `server/index.ts` | Express server entry |
 | `db/schema.ts` | Database schema definitions |
+
+### AI Image Generation
+| File | Purpose |
+|------|---------|
+| `server/lib/gemini.ts` | Gemini API client, `generateImage()` |
+| `server/lib/image-generation.ts` | Prompt building, visual concept extraction |
 
 ### Configuration
 | File | Purpose |
@@ -193,6 +206,13 @@ DELETE /api/posts/:id       - Delete post
 POST   /api/skills          - Create skill
 PUT    /api/skills/:id      - Update skill
 DELETE /api/skills/:id      - Delete skill
+```
+
+### AI Image Generation
+```
+GET    /api/image-generation/status           - Check if Gemini is configured
+POST   /api/projects/:id/regenerate-image     - Regenerate single project image
+POST   /api/projects/regenerate-images-batch  - Batch regenerate all images
 ```
 
 ---
@@ -266,6 +286,12 @@ modalVariants     // Modal content
 1. Update schema in `db/schema.ts`
 2. Run `npm run db:push` to sync
 
+### Regenerate project images
+1. Ensure `GEMINI_API_KEY` is set in `.env`
+2. Go to Admin → Projects
+3. Click "Regenerate All Images" or individual project wand icon
+4. Images are generated based on project description (unique per project)
+
 ---
 
 ## Environment Variables
@@ -277,6 +303,7 @@ SESSION_SECRET=your-secret-key
 
 # Optional
 GITHUB_TOKEN=your-github-token
+GEMINI_API_KEY=your-gemini-api-key  # For AI image generation
 NODE_ENV=development
 ```
 
@@ -319,6 +346,34 @@ NODE_ENV=development
 
 **Browserslist outdated warning:**
 - Run: `npx update-browserslist-db@latest`
+
+---
+
+## AI Image Generation
+
+### Overview
+Project thumbnails are automatically generated using Google Gemini's Nano Banana model (`gemini-2.5-flash-image`). Each image is unique, based on the project's description.
+
+### How It Works
+1. **Description Analysis**: `extractVisualConcepts()` parses project description for visual keywords
+2. **Color Generation**: `generateColorPalette()` creates unique colors from title hash
+3. **Prompt Building**: `buildProjectPrompt()` creates a detailed, project-specific prompt
+4. **Fallback Chain**: Gemini → GitHub OpenGraph → SVG Placeholder
+
+### Key Files
+| File | Purpose |
+|------|---------|
+| `server/lib/gemini.ts` | Gemini API client, image generation |
+| `server/lib/image-generation.ts` | Prompt building, visual concept extraction |
+
+### Visual Concept Mappings
+The system extracts visual concepts from descriptions:
+- `directory/folder/file` → folder hierarchies, file trees
+- `audio/sound/speech` → sound waveforms, speech bubbles
+- `database/sql/query` → database schemas, connected tables
+- `gpu/cuda/processor` → graphics cards, processing units
+- `temperature/thermal` → temperature gauges, thermal displays
+- And 30+ more patterns...
 
 ---
 

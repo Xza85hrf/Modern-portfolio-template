@@ -19,6 +19,7 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
+    sourcemap: process.env.NODE_ENV !== 'production', // Disable source maps in production
     rollupOptions: {
       output: {
         manualChunks: {
@@ -39,7 +40,7 @@ export default defineConfig({
             "@radix-ui/react-tooltip",
           ],
           // Separate TipTap editor (loaded only in admin)
-          "editor": ["@tiptap/react", "@tiptap/starter-kit", "@tiptap/extension-image"],
+          "editor": ["@tiptap/react", "@tiptap/starter-kit"],
           // Separate charting library
           "charts": ["recharts"],
         },
@@ -50,5 +51,12 @@ export default defineConfig({
     host: "0.0.0.0",
     port: process.env.PORT ? parseInt(process.env.PORT) : 5000, // Use PORT env var or default to 5000
     strictPort: false, // Allow finding an available port if specified port is in use
+    proxy: {
+      // Proxy API requests to Express server
+      "/api": {
+        target: "http://localhost:5001",
+        changeOrigin: true,
+      },
+    },
   },
 });

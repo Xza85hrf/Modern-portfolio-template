@@ -1,19 +1,17 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import pg from "pg";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
 import * as schema from "@db/schema";
+import dotenv from "dotenv";
 
-// Mock implementation for the database connection
-// This avoids the error "DATABASE_URL is not set" and allows the rest of the application
-// to proceed without a real database.
+// Load environment variables
+dotenv.config();
 
-// Replace with your actual database connection if needed
-class MockPool {
-  query(sql: string) {
-    console.warn('Using mock database, query:', sql);
-    return Promise.resolve({ rows: [] });
-  }
+if (!process.env.DATABASE_URL) {
+  console.warn("DATABASE_URL not set - database operations will fail");
 }
 
-const pool = new MockPool() as unknown as pg.Pool;
+// Create Neon client
+const sql = neon(process.env.DATABASE_URL || "");
 
-export const db = drizzle(pool, { schema });
+// Create Drizzle instance with Neon HTTP driver
+export const db = drizzle(sql, { schema });

@@ -1,0 +1,222 @@
+{
+  "name": "Portfolio GitHub Sync with AI Descriptions",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [1]
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Weekly Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "notes": "Runs every Monday"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.github.com/users/{{ $env.GITHUB_USERNAME }}/repos",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "public"
+            },
+            {
+              "name": "sort",
+              "value": "updated"
+            },
+            {
+              "name": "per_page",
+              "value": "100"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/vnd.github.v3+json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.GITHUB_TOKEN }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-github-repos",
+      "name": "Fetch GitHub Repos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "not-fork",
+              "leftValue": "={{ $json.fork }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-forks",
+      "name": "Filter Out Forks",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [690, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a technical writer creating portfolio project descriptions. Write a compelling, professional 2-3 sentence description for this GitHub repository.\n\nRepository: {{ $json.name }}\nOriginal Description: {{ $json.description || 'No description provided' }}\nPrimary Language: {{ $json.language || 'Not specified' }}\nTopics: {{ ($json.topics || []).join(', ') || 'None' }}\n\nWrite an engaging description that:\n1. Explains what the project does\n2. Highlights key technologies used\n3. Emphasizes the value or problem it solves\n\nRespond with ONLY the description, no quotes or prefixes."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "generate-ai-description",
+      "name": "Generate AI Description",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.4,
+      "position": [910, 200],
+      "notes": "Uses OpenAI to generate engaging descriptions"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "project-data",
+              "name": "projectData",
+              "value": "={\n  \"title\": \"{{ $('Filter Out Forks').item.json.name.replace(/-/g, ' ').replace(/\\b\\w/g, c => c.toUpperCase()) }}\",\n  \"description\": \"{{ $json.message.content }}\",\n  \"image\": \"https://opengraph.githubassets.com/1/{{ $env.GITHUB_USERNAME }}/{{ $('Filter Out Forks').item.json.name }}\",\n  \"technologies\": {{ JSON.stringify($('Filter Out Forks').item.json.language ? [$('Filter Out Forks').item.json.language] : []) }},\n  \"githubLink\": \"{{ $('Filter Out Forks').item.json.html_url }}\",\n  \"link\": {{ $('Filter Out Forks').item.json.homepage ? '\"' + $('Filter Out Forks').item.json.homepage + '\"' : null }},\n  \"metadata\": {\n    \"github\": {\n      \"stars\": {{ $('Filter Out Forks').item.json.stargazers_count }},\n      \"forks\": {{ $('Filter Out Forks').item.json.forks_count }},\n      \"language\": \"{{ $('Filter Out Forks').item.json.language }}\",\n      \"lastUpdate\": \"{{ $('Filter Out Forks').item.json.pushed_at }}\"\n    }\n  }\n}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prepare-project-data",
+      "name": "Prepare Project Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [1130, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.PORTFOLIO_API_URL }}/api/projects",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.projectData }}",
+        "options": {}
+      },
+      "id": "create-update-project",
+      "name": "Create/Update Project",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1350, 200]
+    }
+  ],
+  "connections": {
+    "Weekly Schedule": {
+      "main": [
+        [
+          {
+            "node": "Fetch GitHub Repos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch GitHub Repos": {
+      "main": [
+        [
+          {
+            "node": "Filter Out Forks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Out Forks": {
+      "main": [
+        [
+          {
+            "node": "Generate AI Description",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Generate AI Description": {
+      "main": [
+        [
+          {
+            "node": "Prepare Project Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Project Data": {
+      "main": [
+        [
+          {
+            "node": "Create/Update Project",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["portfolio", "github", "ai"],
+  "triggerCount": 0,
+  "variables": []
+}

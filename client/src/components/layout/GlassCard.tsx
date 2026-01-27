@@ -10,6 +10,7 @@ export interface GlassCardProps
   hover?: boolean;
   glow?: boolean;
   as?: "div" | "article" | "section";
+  onClick?: React.MouseEventHandler<HTMLDivElement>;
 }
 
 const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
@@ -20,6 +21,7 @@ const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
       hover = true,
       glow = false,
       children,
+      onClick,
       ...props
     },
     ref
@@ -47,6 +49,7 @@ const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
         initial="rest"
         whileHover={hover ? "hover" : undefined}
         whileTap={hover ? "tap" : undefined}
+        onClick={onClick}
         {...(props as MotionProps)}
       >
         {children}

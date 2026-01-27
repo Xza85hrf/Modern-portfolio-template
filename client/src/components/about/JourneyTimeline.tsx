@@ -14,31 +14,43 @@ interface JourneyTimelineProps {
   events?: TimelineEvent[];
 }
 
-// Default timeline events
+// Default timeline events - Ravindu Samarappulige's career journey
 const defaultEvents: TimelineEvent[] = [
   {
-    year: "2024",
-    title: "Senior Developer",
-    description: "Leading development of enterprise applications and mentoring junior developers.",
+    year: "Oct 2025",
+    title: "IT Support Specialist @ DROGRÓD",
+    description: "Independent management of company IT infrastructure, network administration, and website maintenance. Technical consulting on IT solutions supporting business operations.",
     type: "leadership",
   },
   {
-    year: "2022",
-    title: "Full Stack Developer",
-    description: "Built scalable web applications using React, Node.js, and PostgreSQL.",
+    year: "July 2024",
+    title: "IT Support Specialist @ Akord",
+    description: "Technical support for office staff, workstation configuration, root cause analysis, and implementation of office process automation solutions.",
     type: "development",
   },
   {
-    year: "2020",
-    title: "Started Professional Journey",
-    description: "Began working as a junior developer, focusing on frontend technologies.",
-    type: "milestone",
+    year: "2024-2025",
+    title: "Master's Degree in Computer Science",
+    description: "WSB Merito Chorzów - Python Developer specialization. Thesis: Visual AI Research Platform for comparing AI models with visual capabilities.",
+    type: "education",
   },
   {
-    year: "2019",
-    title: "Computer Science Degree",
-    description: "Graduated with honors, specializing in software engineering.",
+    year: "2020-2024",
+    title: "Bachelor of Engineering",
+    description: "Silesian University of Technology - Mobile and Industrial IT Systems. Thesis: Application for Querying Databases Using the QBE Language.",
     type: "education",
+  },
+  {
+    year: "Sept 2018",
+    title: "Freelance Software Engineer",
+    description: "Development of IT tools, Python scripting for automation, GUI applications, monitoring dashboards, Docker environments, and AI/ML projects.",
+    type: "development",
+  },
+  {
+    year: "2016-2018",
+    title: "Freelance Translator & Interpreter",
+    description: "Professional translations in Polish, English, and Sinhala. Language support for business meetings, developing communication skills applied in IT support roles.",
+    type: "milestone",
   },
 ];
 

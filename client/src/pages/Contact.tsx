@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Mail, MapPin, Github, Linkedin, Twitter, Send, ArrowRight } from "lucide-react";
+import { Mail, MapPin, Github, Linkedin, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { AnimatedSection, StaggerContainer, StaggerItem } from "@/components/layout/AnimatedPage";
@@ -16,21 +16,20 @@ const contactInfo = [
   {
     icon: Mail,
     label: "Email",
-    value: "hello@example.com",
-    href: "mailto:hello@example.com",
+    value: "srudeshan@yahoo.com",
+    href: "mailto:srudeshan@yahoo.com",
   },
   {
     icon: MapPin,
     label: "Location",
-    value: "San Francisco, CA",
+    value: "Katowice, Poland",
     href: null,
   },
 ];
 
 const socialLinks = [
-  { icon: Github, label: "GitHub", href: "https://github.com" },
-  { icon: Linkedin, label: "LinkedIn", href: "https://linkedin.com" },
-  { icon: Twitter, label: "Twitter", href: "https://twitter.com" },
+  { icon: Github, label: "GitHub", href: "https://github.com/Xza85hrf" },
+  { icon: Linkedin, label: "LinkedIn", href: "https://www.linkedin.com/in/ravindu-samarappulige-90a752259" },
 ];
 
 export default function Contact() {

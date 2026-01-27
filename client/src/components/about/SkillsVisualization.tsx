@@ -10,30 +10,35 @@ interface SkillsVisualizationProps {
 
 // Color mapping for categories
 const categoryColors: Record<string, { ring: string; bg: string; text: string }> = {
-  Frontend: {
+  Infrastructure: {
     ring: "stroke-primary",
     bg: "bg-primary/10",
     text: "text-primary",
   },
-  Backend: {
+  Development: {
     ring: "stroke-secondary",
     bg: "bg-secondary/10",
     text: "text-secondary",
   },
-  Database: {
+  Tools: {
     ring: "stroke-accent",
     bg: "bg-accent/10",
     text: "text-accent",
   },
-  Tools: {
+  "AI/ML": {
     ring: "stroke-chart-4",
     bg: "bg-chart-4/10",
     text: "text-chart-4",
   },
-  Other: {
+  Languages: {
     ring: "stroke-chart-5",
     bg: "bg-chart-5/10",
     text: "text-chart-5",
+  },
+  Other: {
+    ring: "stroke-muted-foreground",
+    bg: "bg-muted/10",
+    text: "text-muted-foreground",
   },
 };
 

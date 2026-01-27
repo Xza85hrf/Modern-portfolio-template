@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
-import { Code2, Database, Palette, Server, Smartphone, Zap } from "lucide-react";
+import { Code2, Server, Terminal, Wrench, Brain, Users } from "lucide-react";
 import { TiltCard } from "@/components/3d/TiltCard";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { staggerContainerVariants, staggerItemVariants } from "@/lib/animations";
@@ -17,44 +17,44 @@ interface Service {
 
 const services: Service[] = [
   {
-    icon: Code2,
-    title: "Frontend Development",
-    description: "Creating responsive, intuitive interfaces with React, TypeScript, and modern CSS.",
+    icon: Wrench,
+    title: "IT Support",
+    description: "Technical support for computers, software, printers, and network issues. Rapid response and durable solutions.",
     gradient: "from-primary/20 to-primary/5",
     iconColor: "text-primary",
   },
   {
     icon: Server,
-    title: "Backend Solutions",
-    description: "Building robust APIs and server-side applications with Node.js and Express.",
+    title: "System Administration",
+    description: "Managing IT infrastructure, local networks, and workstations in Windows and Linux environments.",
     gradient: "from-secondary/20 to-secondary/5",
     iconColor: "text-secondary",
   },
   {
-    icon: Database,
-    title: "Database Design",
-    description: "Designing efficient schemas and optimizing queries for PostgreSQL and more.",
+    icon: Terminal,
+    title: "Scripting & Automation",
+    description: "Python scripts for administrative tasks, office process automation, and streamlined workflows.",
     gradient: "from-accent/20 to-accent/5",
     iconColor: "text-accent",
   },
   {
-    icon: Palette,
-    title: "UI/UX Design",
-    description: "Crafting beautiful, user-centered designs with attention to detail.",
+    icon: Code2,
+    title: "Software Development",
+    description: "Building GUI applications, monitoring dashboards, and tools supporting IT teams and end users.",
     gradient: "from-chart-4/20 to-chart-4/5",
     iconColor: "text-chart-4",
   },
   {
-    icon: Smartphone,
-    title: "Responsive Design",
-    description: "Ensuring seamless experiences across all devices and screen sizes.",
+    icon: Brain,
+    title: "AI/ML Projects",
+    description: "Image and audio processing projects, Vision AI platforms, and integration with local and cloud AI models.",
     gradient: "from-chart-5/20 to-chart-5/5",
     iconColor: "text-chart-5",
   },
   {
-    icon: Zap,
-    title: "Performance",
-    description: "Optimizing applications for speed, accessibility, and user experience.",
+    icon: Users,
+    title: "Technical Consulting",
+    description: "IT solutions consulting for businesses, clear communication with non-technical users, and vendor coordination.",
     gradient: "from-primary/20 to-accent/5",
     iconColor: "text-primary",
   },

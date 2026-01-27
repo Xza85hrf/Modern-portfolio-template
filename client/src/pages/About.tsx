@@ -48,8 +48,8 @@ export default function About() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
-                Hello, I'm a{" "}
-                <span className="gradient-text">Full-Stack Developer</span>
+                Hello, I'm{" "}
+                <span className="gradient-text">Ravindu Samarappulige</span>
               </motion.h1>
 
               <motion.p
@@ -58,10 +58,11 @@ export default function About() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                I'm passionate about creating beautiful, functional, and
-                user-friendly web applications. With expertise in modern
-                technologies like React, Node.js, and PostgreSQL, I bring ideas
-                to life through clean code and thoughtful design.
+                IT Specialist with experience in technical support, system administration,
+                and office process automation. I combine strong technical skills with the
+                ability to communicate effectively with non-technical users. Working fluently
+                in Windows and Linux environments, I efficiently diagnose hardware, network,
+                and system problems while delivering durable solutions.
               </motion.p>
 
               {/* Quick info */}
@@ -73,11 +74,11 @@ export default function About() {
               >
                 <span className="flex items-center gap-1">
                   <MapPin className="h-4 w-4 text-primary" />
-                  Remote / Worldwide
+                  Katowice, Poland
                 </span>
                 <span className="flex items-center gap-1">
                   <Mail className="h-4 w-4 text-primary" />
-                  Available for work
+                  srudeshan@yahoo.com
                 </span>
               </motion.div>
 

@@ -22,8 +22,6 @@ import Navigation from "./components/Navigation";
 const Home = lazy(() => import("./pages/Home"));
 const About = lazy(() => import("./pages/About"));
 const Portfolio = lazy(() => import("./pages/Portfolio"));
-const Blog = lazy(() => import("./pages/Blog"));
-const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Admin = lazy(() => import("./pages/Admin"));
 
@@ -52,7 +50,7 @@ function AnimatedRoutes() {
 
   return (
     <Suspense fallback={<PageLoader />}>
-      <AnimatePresence mode="wait" initial={false}>
+      <AnimatePresence mode="wait">
         <Switch key={location}>
           <Route path="/">
             <AnimatedPage>
@@ -67,16 +65,6 @@ function AnimatedRoutes() {
           <Route path="/portfolio">
             <AnimatedPage>
               <Portfolio />
-            </AnimatedPage>
-          </Route>
-          <Route path="/blog">
-            <AnimatedPage>
-              <Blog />
-            </AnimatedPage>
-          </Route>
-          <Route path="/blog/:slug">
-            <AnimatedPage>
-              <BlogPost />
             </AnimatedPage>
           </Route>
           <Route path="/contact">

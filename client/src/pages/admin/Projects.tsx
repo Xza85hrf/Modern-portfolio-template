@@ -3,7 +3,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type Project, insertProjectSchema } from "@db/schema";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { Github, RefreshCw, Wand2, ImageIcon } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,10 +43,17 @@ export default function Projects() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [regeneratingId, setRegeneratingId] = useState<number | null>(null);
 
   const { data: projects, isLoading } = useQuery<Project[]>({
     queryKey: ["projects"],
-    queryFn: () => fetch("/api/projects").then((res) => res.json()),
+    queryFn: () => apiGet<Project[]>("/api/projects"),
+  });
+
+  // Check if AI image generation is available
+  const { data: imageGenStatus } = useQuery<{ available: boolean; provider: string | null }>({
+    queryKey: ["image-generation-status"],
+    queryFn: () => apiGet<{ available: boolean; provider: string | null }>("/api/image-generation/status"),
   });
 
   const form = useForm<ProjectFormData>({
@@ -61,22 +70,14 @@ export default function Projects() {
 
   const mutation = useMutation({
     mutationFn: async (data: ProjectFormData) => {
-      const response = await fetch("/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          technologies:
-            data.technologies.length > 0 ? data.technologies.join(",") : "",
-          metadata: {},
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }),
+      return apiPost("/api/projects", {
+        ...data,
+        technologies:
+          data.technologies.length > 0 ? data.technologies.join(",") : "",
+        metadata: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
-      if (!response.ok) {
-        throw new Error("Failed to create project");
-      }
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
@@ -97,13 +98,7 @@ export default function Projects() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await fetch(`/api/projects/${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        throw new Error("Failed to delete project");
-      }
-      return response.json();
+      return apiDelete(`/api/projects/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
@@ -123,21 +118,13 @@ export default function Projects() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: Project & { technologies: string[] }) => {
-      const response = await fetch(`/api/projects/${data.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          technologies:
-            data.technologies.length > 0 ? data.technologies.join(",") : "",
-          metadata: data.metadata || {},
-          updatedAt: new Date(),
-        }),
+      return apiPut(`/api/projects/${data.id}`, {
+        ...data,
+        technologies:
+          data.technologies.length > 0 ? data.technologies.join(",") : "",
+        metadata: data.metadata || {},
+        updatedAt: new Date(),
       });
-      if (!response.ok) {
-        throw new Error("Failed to update project");
-      }
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
@@ -151,6 +138,74 @@ export default function Projects() {
       toast({
         title: "Error",
         description: "Failed to update project. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Sync all GitHub repos mutation
+  const syncAllGithubMutation = useMutation({
+    mutationFn: async () => {
+      return apiPost<{ summary: { created: number; updated: number } }>("/api/projects/sync-github-all", {});
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast({
+        title: "GitHub Sync Complete!",
+        description: `Created ${data.summary.created} new projects, updated ${data.summary.updated} existing.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to sync GitHub repos. Make sure your GitHub token is configured.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Regenerate single project image mutation
+  const regenerateImageMutation = useMutation({
+    mutationFn: async (projectId: number) => {
+      setRegeneratingId(projectId);
+      return apiPost<{ imageSource: string; project: { title: string } }>(`/api/projects/${projectId}/regenerate-image`, {});
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      const sourceLabel = data.imageSource === "gemini" ? "AI-generated" :
+                         data.imageSource === "github" ? "GitHub" : "placeholder";
+      toast({
+        title: "Image Regenerated!",
+        description: `New ${sourceLabel} image created for "${data.project.title}".`,
+      });
+      setRegeneratingId(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to regenerate image. Please try again.",
+        variant: "destructive",
+      });
+      setRegeneratingId(null);
+    },
+  });
+
+  // Batch regenerate all project images mutation
+  const regenerateAllImagesMutation = useMutation({
+    mutationFn: async () => {
+      return apiPost<{ summary: { geminiGenerated: number; fallback: number } }>("/api/projects/regenerate-images-batch", {});
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast({
+        title: "Batch Image Generation Complete!",
+        description: `${data.summary.geminiGenerated} AI-generated, ${data.summary.fallback} fallback images.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to regenerate images. Please try again.",
         variant: "destructive",
       });
     },
@@ -174,7 +229,37 @@ export default function Projects() {
 
   return (
     <div className="space-y-8">
-      <h2 className="text-3xl font-bold">Manage Projects</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold">Manage Projects</h2>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => regenerateAllImagesMutation.mutate()}
+            disabled={regenerateAllImagesMutation.isPending}
+            variant="outline"
+            className="gap-2"
+            title={imageGenStatus?.available ? "Generate AI thumbnails for all projects" : "AI image generation not configured"}
+          >
+            {regenerateAllImagesMutation.isPending ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <ImageIcon className="h-4 w-4" />
+            )}
+            {regenerateAllImagesMutation.isPending ? "Generating..." : "Regenerate All Images"}
+          </Button>
+          <Button
+            onClick={() => syncAllGithubMutation.mutate()}
+            disabled={syncAllGithubMutation.isPending}
+            className="gap-2"
+          >
+            {syncAllGithubMutation.isPending ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <Github className="h-4 w-4" />
+            )}
+            {syncAllGithubMutation.isPending ? "Syncing..." : "Sync All GitHub Repos"}
+          </Button>
+        </div>
+      </div>
 
       <div className="space-y-8">
         <div className="bg-card rounded-lg border p-6 shadow-sm">
@@ -376,21 +461,26 @@ export default function Projects() {
                       >
                         Edit
                       </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => regenerateImageMutation.mutate(project.id)}
+                        disabled={regeneratingId === project.id || regenerateAllImagesMutation.isPending}
+                        title={imageGenStatus?.available ? "Regenerate project thumbnail with AI" : "Uses GitHub/placeholder fallback"}
+                      >
+                        {regeneratingId === project.id ? (
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Wand2 className="h-4 w-4" />
+                        )}
+                      </Button>
                       {project.githubLink && (
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={async () => {
                             try {
-                              const response = await fetch(
-                                `/api/projects/${project.id}/sync-github`,
-                                {
-                                  method: "POST",
-                                }
-                              );
-                              if (!response.ok) {
-                                throw new Error("Failed to sync with GitHub");
-                              }
+                              await apiPost(`/api/projects/${project.id}/sync-github`, {});
                               await queryClient.invalidateQueries({
                                 queryKey: ["projects"],
                               });

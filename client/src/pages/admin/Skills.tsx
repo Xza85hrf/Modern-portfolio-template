@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type Skill, insertSkillSchema } from "@db/schema";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -44,7 +45,7 @@ export default function Skills() {
   
   const { data: skills, isLoading } = useQuery<Skill[]>({
     queryKey: ["skills"],
-    queryFn: () => fetch("/api/skills").then((res) => res.json()),
+    queryFn: () => apiGet<Skill[]>("/api/skills"),
   });
 
   const form = useForm({
@@ -57,12 +58,7 @@ export default function Skills() {
   });
 
   const mutation = useMutation({
-    mutationFn: (data: Omit<Skill, 'id'>) =>
-      fetch("/api/skills", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      }),
+    mutationFn: (data: Omit<Skill, 'id'>) => apiPost("/api/skills", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["skills"] });
       toast({
@@ -75,21 +71,12 @@ export default function Skills() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: Skill) => {
-      const response = await fetch(`/api/skills/${data.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: data.id,
-          name: data.name,
-          category: data.category,
-          proficiency: data.proficiency
-        }),
+      return apiPut(`/api/skills/${data.id}`, {
+        id: data.id,
+        name: data.name,
+        category: data.category,
+        proficiency: data.proficiency
       });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update skill');
-      }
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["skills"] });
@@ -114,10 +101,7 @@ export default function Skills() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) =>
-      fetch(`/api/skills/${id}`, {
-        method: "DELETE",
-      }),
+    mutationFn: (id: number) => apiDelete(`/api/skills/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["skills"] });
       toast({

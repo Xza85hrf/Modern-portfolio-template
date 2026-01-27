@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type Post, insertPostSchema } from "@db/schema";
+import { apiGet, apiPost, apiPut } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { JSONContent } from "@tiptap/react";
 import {
@@ -46,7 +47,7 @@ export default function Posts() {
   
   const { data: posts, isLoading } = useQuery<Post[]>({
     queryKey: ["posts"],
-    queryFn: () => fetch("/api/posts").then((res) => res.json()),
+    queryFn: () => apiGet<Post[]>("/api/posts"),
   });
 
   const form = useForm<PostFormData>({
@@ -61,15 +62,11 @@ export default function Posts() {
 
   const mutation = useMutation({
     mutationFn: (data: PostFormData) =>
-      fetch("/api/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          tags: data.tags?.join(',') || null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }),
+      apiPost("/api/posts", {
+        ...data,
+        tags: data.tags?.join(',') || null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
@@ -83,28 +80,11 @@ export default function Posts() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: PostFormData) => {
-      const response = await fetch(`/api/posts/${data.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          tags: data.tags?.join(',') || null,
-          updatedAt: new Date(),
-        }),
+      return apiPut(`/api/posts/${data.id}`, {
+        ...data,
+        tags: data.tags?.join(',') || null,
+        updatedAt: new Date(),
       });
-
-      if (!response.ok) {
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to update post');
-        } else {
-          throw new Error('Server error: Failed to update post');
-        }
-      }
-
-      const result = await response.json();
-      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
@@ -131,8 +111,13 @@ export default function Posts() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
+      // Note: Posts delete endpoint doesn't exist yet in routes.ts
+      // Using apiDelete for when it's implemented
       const response = await fetch(`/api/posts/${id}`, {
         method: "DELETE",
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
       });
       if (!response.ok) {
         throw new Error('Failed to delete post');

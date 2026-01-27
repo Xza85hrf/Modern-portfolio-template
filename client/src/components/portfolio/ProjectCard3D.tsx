@@ -1,13 +1,10 @@
 import { memo, useState } from "react";
-import { motion } from "framer-motion";
 import { Github, ExternalLink, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TiltCard } from "@/components/3d/TiltCard";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { type Project } from "@db/schema";
 import { cn } from "@/lib/utils";
-import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 interface ProjectCard3DProps {
   project: Project;
@@ -17,21 +14,15 @@ interface ProjectCard3DProps {
 export const ProjectCard3D = memo(function ProjectCard3D({ project, onViewDetails }: ProjectCard3DProps) {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const prefersReducedMotion = useReducedMotion();
 
   const hasImage = project.image && !imageError;
 
   return (
-    <TiltCard
-      tiltAmount={8}
-      glareEnabled={!prefersReducedMotion}
-      className="h-full"
+    <GlassCard
+      variant="elevated"
+      hover={true}
+      className="h-full flex flex-col overflow-hidden group"
     >
-      <GlassCard
-        variant="elevated"
-        hover={false}
-        className="h-full flex flex-col overflow-hidden group"
-      >
         {/* Image Section */}
         <div className="relative aspect-video overflow-hidden">
           {hasImage ? (
@@ -40,7 +31,7 @@ export const ProjectCard3D = memo(function ProjectCard3D({ project, onViewDetail
               {!isImageLoaded && (
                 <div className="absolute inset-0 bg-muted animate-pulse" />
               )}
-              <motion.img
+              <img
                 src={project.image}
                 alt={`Screenshot of ${project.title} project`}
                 loading="lazy"
@@ -63,22 +54,6 @@ export const ProjectCard3D = memo(function ProjectCard3D({ project, onViewDetail
               </span>
             </div>
           )}
-
-          {/* Overlay on hover */}
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center p-4"
-            initial={false}
-          >
-            <Button
-              size="sm"
-              variant="secondary"
-              className="glass"
-              onClick={() => onViewDetails?.(project)}
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              View Details
-            </Button>
-          </motion.div>
 
           {/* Tech badge overlay */}
           <div className="absolute top-3 right-3 flex gap-1">
@@ -122,36 +97,57 @@ export const ProjectCard3D = memo(function ProjectCard3D({ project, onViewDetail
             ))}
           </div>
 
-          {/* Action Links */}
-          <div className="flex items-center gap-3 pt-3 border-t border-border/50">
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2 pt-3 border-t border-border/50">
+            {/* View Details Button - Always visible */}
+            <Button
+              size="sm"
+              variant="default"
+              className="flex-1"
+              onClick={() => onViewDetails?.(project)}
+            >
+              <Eye className="h-4 w-4 mr-1.5" />
+              View Details
+            </Button>
+
+            {/* External Links */}
             {project.link && (
-              <motion.a
-                href={project.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
-                whileHover={prefersReducedMotion ? {} : { x: 2 }}
+              <Button
+                size="sm"
+                variant="outline"
+                className="px-2"
+                asChild
               >
-                <ExternalLink className="h-4 w-4" />
-                <span>Live Demo</span>
-              </motion.a>
+                <a
+                  href={project.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Live Demo"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </Button>
             )}
             {project.githubLink && (
-              <motion.a
-                href={project.githubLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
-                whileHover={prefersReducedMotion ? {} : { x: 2 }}
+              <Button
+                size="sm"
+                variant="outline"
+                className="px-2"
+                asChild
               >
-                <Github className="h-4 w-4" />
-                <span>Source</span>
-              </motion.a>
+                <a
+                  href={project.githubLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Source Code"
+                >
+                  <Github className="h-4 w-4" />
+                </a>
+              </Button>
             )}
           </div>
         </div>
       </GlassCard>
-    </TiltCard>
   );
 });
 

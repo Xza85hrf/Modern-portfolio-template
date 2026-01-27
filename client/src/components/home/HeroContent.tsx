@@ -12,9 +12,9 @@ interface HeroContentProps {
 }
 
 export function HeroContent({
-  title = "Crafting Digital Experiences",
-  subtitle = "Full-Stack Developer",
-  description = "Building exceptional web applications with modern technologies. Turning ideas into elegant, functional solutions.",
+  title = "Empowering IT Solutions",
+  subtitle = "IT Specialist",
+  description = "IT Specialist combining technical support expertise with system administration and automation. Delivering durable solutions through clear communication and efficient problem-solving.",
 }: HeroContentProps) {
   const prefersReducedMotion = useReducedMotion();
 
@@ -38,9 +38,9 @@ export function HeroContent({
         className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6"
         variants={heroTextVariants}
       >
-        <span className="block text-foreground">Crafting</span>
-        <span className="block gradient-text">Digital</span>
-        <span className="block text-foreground">Experiences</span>
+        <span className="block text-foreground">Empowering</span>
+        <span className="block gradient-text">IT</span>
+        <span className="block text-foreground">Solutions</span>
       </motion.h1>
 
       {/* Description */}

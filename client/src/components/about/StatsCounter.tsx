@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { Code2, Coffee, Users, Zap } from "lucide-react";
+import { Code2, Languages, GraduationCap, Zap } from "lucide-react";
 import { GlassCard } from "@/components/layout/GlassCard";
 import { cn } from "@/lib/utils";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
@@ -19,31 +19,31 @@ interface StatsCounterProps {
 
 const defaultStats: Stat[] = [
   {
-    label: "Projects Completed",
-    value: 50,
+    label: "Years Experience",
+    value: 8,
     suffix: "+",
-    icon: Code2,
+    icon: Zap,
     color: "text-primary",
   },
   {
-    label: "Happy Clients",
-    value: 30,
-    suffix: "+",
-    icon: Users,
+    label: "Languages Spoken",
+    value: 3,
+    suffix: "",
+    icon: Languages,
     color: "text-secondary",
   },
   {
-    label: "Cups of Coffee",
-    value: 1000,
+    label: "GitHub Projects",
+    value: 15,
     suffix: "+",
-    icon: Coffee,
+    icon: Code2,
     color: "text-accent",
   },
   {
-    label: "Years Experience",
-    value: 5,
-    suffix: "+",
-    icon: Zap,
+    label: "Degrees Earned",
+    value: 2,
+    suffix: "",
+    icon: GraduationCap,
     color: "text-chart-4",
   },
 ];

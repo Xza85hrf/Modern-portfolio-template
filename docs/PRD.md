@@ -152,7 +152,9 @@ A world-class, modern portfolio website that showcases professional work through
 - [x] CRUD operations for projects
 - [x] Technology tagging
 - [x] Image upload/URL support
-- [x] Drag-and-drop ordering (future)
+- [x] AI-powered thumbnail generation (Gemini)
+- [x] Batch image regeneration
+- [ ] Drag-and-drop ordering (future)
 
 #### 3.2.4 Blog Management
 - [x] Rich text editor (TipTap)
@@ -164,6 +166,22 @@ A world-class, modern portfolio website that showcases professional work through
 - [x] Add/edit/delete skills
 - [x] Category organization
 - [x] Proficiency levels
+
+#### 3.2.6 AI Image Generation
+**Purpose:** Automatically generate unique, project-specific thumbnails
+
+**Requirements:**
+- [x] Google Gemini integration (Nano Banana model)
+- [x] Description-based visual concept extraction
+- [x] Unique color palette per project
+- [x] Single project regeneration
+- [x] Batch regeneration for all projects
+- [x] Fallback chain (Gemini → GitHub → Placeholder)
+
+**Technical Implementation:**
+- Model: `gemini-2.5-flash-image` (Nano Banana)
+- Storage: Base64 data URLs in database
+- Prompt: Dynamic based on project description analysis
 
 ### 3.3 Design System
 
@@ -204,6 +222,7 @@ A world-class, modern portfolio website that showcases professional work through
 | Backend | Express.js | API server |
 | Database | PostgreSQL + Drizzle ORM | Data persistence |
 | Auth | Passport.js + bcrypt | Authentication |
+| AI Images | Google Gemini (Nano Banana) | Thumbnail generation |
 | Build | Vite | Development & bundling |
 
 ### 4.2 Project Structure
@@ -261,6 +280,9 @@ admin_users    - Admin authentication
 | POST | /api/messages | Submit contact form |
 | POST | /api/auth/login | Admin login |
 | POST | /api/auth/logout | Admin logout |
+| GET | /api/image-generation/status | Check Gemini status |
+| POST | /api/projects/:id/regenerate-image | Regenerate thumbnail |
+| POST | /api/projects/regenerate-images-batch | Batch regenerate |
 
 ---
 
@@ -329,13 +351,14 @@ admin_users    - Admin authentication
 - Floating input forms
 - Success animations
 
-### Phase 7: Polish (Current)
+### Phase 7: Polish ✅
 - Code splitting
 - Performance optimization
 - Accessibility audit
 - Error boundaries
+- AI image generation (Gemini integration)
 
-### Phase 8: Deployment
+### Phase 8: Deployment (Current)
 - Vercel configuration
 - Environment setup
 - Domain configuration
@@ -359,6 +382,8 @@ admin_users    - Admin authentication
 - [ ] Case study pages
 - [ ] Client testimonials
 - [ ] Real-time analytics dashboard
+- [ ] Custom image prompts per project
+- [ ] Image style presets (realistic, cartoon, etc.)
 
 ---
 
