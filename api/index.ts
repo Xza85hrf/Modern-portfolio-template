@@ -1,10 +1,36 @@
-import 'dotenv/config';
+// Log startup for debugging
+console.log('[API] Starting serverless function...');
+console.log('[API] DATABASE_URL exists:', !!process.env.DATABASE_URL);
+console.log('[API] NODE_ENV:', process.env.NODE_ENV);
+
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "../server/routes";
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
-import logger from '../server/lib/logger';
+
+console.log('[API] Express imported successfully');
+
+// Import routes with error handling
+let registerRoutes: typeof import("../server/routes").registerRoutes;
+let logger: typeof import("../server/lib/logger").default;
+
+try {
+  const routesModule = await import("../server/routes");
+  registerRoutes = routesModule.registerRoutes;
+  console.log('[API] Routes imported successfully');
+} catch (err) {
+  console.error('[API] Failed to import routes:', err);
+  throw err;
+}
+
+try {
+  const loggerModule = await import("../server/lib/logger");
+  logger = loggerModule.default;
+  console.log('[API] Logger imported successfully');
+} catch (err) {
+  console.error('[API] Failed to import logger:', err);
+  throw err;
+}
 
 const app = express();
 
