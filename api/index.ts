@@ -1,38 +1,59 @@
-// Log startup for debugging
-console.log('[API] Starting serverless function...');
-console.log('[API] DATABASE_URL exists:', !!process.env.DATABASE_URL);
-console.log('[API] NODE_ENV:', process.env.NODE_ENV);
+// Serverless function entry point for Vercel
+console.log('[API] Module loading...');
 
 import express, { type Request, Response, NextFunction } from "express";
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import cors from 'cors';
 
-console.log('[API] Express imported successfully');
+console.log('[API] Core modules imported');
 
-// Import routes with error handling
-let registerRoutes: typeof import("../server/routes").registerRoutes;
-let logger: typeof import("../server/lib/logger").default;
+// Wrap imports that might fail
+let registerRoutes: any;
+let logger: any;
+let dbInitialized = false;
 
-try {
-  const routesModule = await import("../server/routes");
-  registerRoutes = routesModule.registerRoutes;
-  console.log('[API] Routes imported successfully');
-} catch (err) {
-  console.error('[API] Failed to import routes:', err);
-  throw err;
-}
+// Lazy initialization to catch errors
+async function initialize() {
+  if (dbInitialized) return;
 
-try {
-  const loggerModule = await import("../server/lib/logger");
-  logger = loggerModule.default;
-  console.log('[API] Logger imported successfully');
-} catch (err) {
-  console.error('[API] Failed to import logger:', err);
-  throw err;
+  try {
+    console.log('[API] Loading routes...');
+    const routes = await import("../server/routes");
+    registerRoutes = routes.registerRoutes;
+    console.log('[API] Routes loaded successfully');
+  } catch (err) {
+    console.error('[API] Routes import failed:', err);
+    throw err;
+  }
+
+  try {
+    console.log('[API] Loading logger...');
+    const log = await import("../server/lib/logger");
+    logger = log.default;
+    console.log('[API] Logger loaded successfully');
+  } catch (err) {
+    console.error('[API] Logger import failed:', err);
+    // Use console as fallback
+    logger = { error: console.error };
+  }
+
+  dbInitialized = true;
 }
 
 const app = express();
+
+// Health check endpoint (before other middleware)
+app.get('/api/health', (_req, res) => {
+  res.json({
+    status: 'ok',
+    time: new Date().toISOString(),
+    env: {
+      hasDb: !!process.env.DATABASE_URL,
+      nodeEnv: process.env.NODE_ENV
+    }
+  });
+});
 
 // Security middleware
 app.use(helmet());
@@ -41,14 +62,9 @@ app.use(helmet());
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(s => s.trim()) || [];
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
-    // In development, allow all origins
     if (process.env.NODE_ENV !== 'production') return callback(null, true);
-    // In production, check against allowed origins
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+    if (allowedOrigins.includes(origin)) return callback(null, true);
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -56,52 +72,56 @@ app.use(cors({
 
 // Rate limiting
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per window
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: { message: 'Too many requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 login attempts per window
-  message: { message: 'Too many login attempts, please try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// Apply rate limiting
 app.use('/api/', apiLimiter);
-app.use('/api/auth/', authLimiter);
-
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false }));
 
-// Register API routes
-registerRoutes(app);
+// Middleware to ensure initialization before route handlers
+app.use(async (_req, _res, next) => {
+  try {
+    await initialize();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Dynamic route registration after initialization
+app.use('/api', async (req, res, next) => {
+  if (!registerRoutes) {
+    return res.status(503).json({ error: 'Service initializing...' });
+  }
+  next();
+});
+
+// Register routes after middleware
+(async () => {
+  try {
+    await initialize();
+    if (registerRoutes) {
+      registerRoutes(app);
+      console.log('[API] Routes registered');
+    }
+  } catch (err) {
+    console.error('[API] Failed to register routes:', err);
+  }
+})();
 
 // Error handler
 app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
-  let status = 500;
-  let message = "Internal Server Error";
-
-  if (err.response) {
-    status = err.response.status || 500;
-    message = err.response.data.error || err.response.data || err.message;
-  } else if (err.name === 'ValidationError') {
-    status = 400;
-    message = Object.values(err.errors).map((e: any) => e.message).join(', ');
-  } else if (err.code === 'P2002') {
-    status = 409;
-    message = 'Unique constraint violation.';
-  } else if (err.name) {
-    message = err.name + ': ' + err.message;
-  }
-
-  logger.error(`Request error: ${req.method} ${req.url} - ${message}`, err);
+  console.error('[API] Error:', err);
+  const status = err.status || 500;
+  const message = err.message || 'Internal Server Error';
   res.status(status).json({ error: message });
 });
 
-// Export for Vercel serverless
+console.log('[API] Express app configured');
+
 export default app;
