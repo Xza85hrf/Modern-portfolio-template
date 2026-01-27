@@ -35,6 +35,9 @@ function log(message: string) {
 
 const app = express();
 
+// Trust proxy for Vercel/serverless environments
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 
@@ -42,12 +45,20 @@ app.use(helmet());
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(s => s.trim()) || [];
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, etc.)
+    // Allow requests with no origin (mobile apps, curl, server-side, etc.)
     if (!origin) return callback(null, true);
     // In development, allow all origins
     if (process.env.NODE_ENV !== 'production') return callback(null, true);
-    // In production, check against allowed origins
-    if (allowedOrigins.includes(origin)) {
+    // Allow same-site requests (Vercel deployments)
+    if (origin.endsWith('.vercel.app') || origin.includes('localhost')) {
+      return callback(null, true);
+    }
+    // Check against custom allowed origins
+    if (allowedOrigins.length > 0 && allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    // Allow if no custom origins configured (default permissive for portfolio)
+    if (allowedOrigins.length === 0) {
       return callback(null, true);
     }
     return callback(new Error('Not allowed by CORS'));
@@ -55,13 +66,17 @@ app.use(cors({
   credentials: true,
 }));
 
-// Rate limiting
+// Rate limiting with proper proxy support
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // 100 requests per window
   message: { message: 'Too many requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  // Use X-Forwarded-For header for client IP (Vercel sets this)
+  keyGenerator: (req) => {
+    return req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
+  },
 });
 
 const authLimiter = rateLimit({
@@ -70,6 +85,9 @@ const authLimiter = rateLimit({
   message: { message: 'Too many login attempts, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => {
+    return req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
+  },
 });
 
 // Apply rate limiting
