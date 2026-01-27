@@ -1,13 +1,12 @@
 {
   "version": 2,
-  "buildCommand": "npm run build:client",
+  "buildCommand": "npm run build:api && npm run build:client",
   "outputDirectory": "dist",
   "installCommand": "npm install --include=dev",
   "framework": null,
   "functions": {
-    "api/index.ts": {
-      "maxDuration": 30,
-      "includeFiles": "{server,db}/**"
+    "api/index.js": {
+      "maxDuration": 30
     }
   },
   "rewrites": [

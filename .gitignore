@@ -51,3 +51,4 @@ build
 .vercel
 .env*.local
 portable-kit/.mcp.json
+api/index.js
