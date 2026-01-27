@@ -1,0 +1,197 @@
+name: Automated Security Audit
+
+# Runs weekly security audits and creates PRs with fixes
+
+on:
+  # Run every Monday at 8 AM UTC
+  schedule:
+    - cron: '0 8 * * 1'
+
+  # Allow manual trigger
+  workflow_dispatch:
+
+  # Also run on push to main when dependencies change
+  push:
+    branches:
+      - main
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  security-audit:
+    name: NPM Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run security audit
+        id: audit
+        continue-on-error: true
+        run: |
+          echo "## Security Audit Report" > audit-report.txt
+          echo "" >> audit-report.txt
+          echo "Generated: $(date)" >> audit-report.txt
+          echo "" >> audit-report.txt
+
+          # Run audit and capture output
+          if npm audit --production --json > audit.json 2>&1; then
+            echo "✅ No vulnerabilities found in production dependencies" >> audit-report.txt
+            echo "has_vulnerabilities=false" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Vulnerabilities detected" >> audit-report.txt
+            echo "has_vulnerabilities=true" >> $GITHUB_OUTPUT
+
+            # Parse audit results
+            if [ -f audit.json ]; then
+              echo "" >> audit-report.txt
+              echo "### Vulnerability Summary" >> audit-report.txt
+              echo "" >> audit-report.txt
+
+              # Extract vulnerability counts
+              CRITICAL=$(jq -r '.metadata.vulnerabilities.critical // 0' audit.json)
+              HIGH=$(jq -r '.metadata.vulnerabilities.high // 0' audit.json)
+              MODERATE=$(jq -r '.metadata.vulnerabilities.moderate // 0' audit.json)
+              LOW=$(jq -r '.metadata.vulnerabilities.low // 0' audit.json)
+
+              echo "- Critical: $CRITICAL" >> audit-report.txt
+              echo "- High: $HIGH" >> audit-report.txt
+              echo "- Moderate: $MODERATE" >> audit-report.txt
+              echo "- Low: $LOW" >> audit-report.txt
+
+              echo "" >> audit-report.txt
+              echo "### Details" >> audit-report.txt
+              echo "" >> audit-report.txt
+              npm audit --production >> audit-report.txt 2>&1 || true
+            fi
+          fi
+
+          # Also check dev dependencies
+          echo "" >> audit-report.txt
+          echo "---" >> audit-report.txt
+          echo "" >> audit-report.txt
+          echo "## Dev Dependencies Audit" >> audit-report.txt
+          echo "" >> audit-report.txt
+          npm audit --json > audit-dev.json 2>&1 || true
+
+          if [ -f audit-dev.json ]; then
+            DEV_TOTAL=$(jq -r '.metadata.vulnerabilities.total // 0' audit-dev.json)
+            if [ "$DEV_TOTAL" -gt 0 ]; then
+              echo "Warning: $DEV_TOTAL vulnerabilities in dev dependencies" >> audit-report.txt
+            else
+              echo "✅ No vulnerabilities in dev dependencies" >> audit-report.txt
+            fi
+          fi
+
+      - name: Try automatic fix
+        id: fix
+        if: steps.audit.outputs.has_vulnerabilities == 'true'
+        run: |
+          echo "Attempting automatic fix..."
+
+          # Try to fix vulnerabilities
+          if npm audit fix --force --package-lock-only; then
+            echo "fix_available=true" >> $GITHUB_OUTPUT
+            echo "✅ Automatic fix applied" >> audit-report.txt
+          else
+            echo "fix_available=false" >> $GITHUB_OUTPUT
+            echo "Manual intervention required" >> audit-report.txt
+          fi
+
+          # Check if package-lock.json was modified
+          if git diff --quiet package-lock.json; then
+            echo "changes_made=false" >> $GITHUB_OUTPUT
+            echo "No changes to package-lock.json" >> audit-report.txt
+          else
+            echo "changes_made=true" >> $GITHUB_OUTPUT
+            echo "✅ package-lock.json updated" >> audit-report.txt
+          fi
+
+      - name: Create Pull Request with fixes
+        if: steps.fix.outputs.changes_made == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            fix(security): apply npm audit fix for vulnerabilities
+
+            Automated security update applied by npm audit fix.
+          branch: security/automated-audit-fixes-${{ github.run_number }}
+          delete-branch: true
+          title: 'Security: Apply npm audit fixes'
+          body: |
+            ## Automated Security Fixes
+
+            This PR was automatically created by the weekly security audit workflow.
+
+            ### What was done
+            - Ran `npm audit` to detect vulnerabilities
+            - Applied `npm audit fix --force` to resolve issues
+            - Updated `package-lock.json` with security patches
+
+            ### Important
+            - All tests must pass before merging
+            - Review dependency changes in `package-lock.json`
+            - Check that `"type": "module"` is still present in `package.json`
+
+            ---
+            Automated by GitHub Actions
+          labels: |
+            security
+            automated
+            dependencies
+          base: main
+
+      - name: Post summary
+        if: always()
+        run: |
+          echo "## Security Audit Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.audit.outputs.has_vulnerabilities }}" == "true" ]; then
+            echo "**Vulnerabilities detected**" >> $GITHUB_STEP_SUMMARY
+
+            if [ "${{ steps.fix.outputs.changes_made }}" == "true" ]; then
+              echo "✅ Automatic fix applied - PR created" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "Manual intervention may be required" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "✅ **No vulnerabilities detected**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Full Report" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat audit-report.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit-reports
+          path: |
+            audit-report.txt
+            audit.json
+            audit-dev.json
+          retention-days: 90

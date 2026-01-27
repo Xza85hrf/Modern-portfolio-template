@@ -1,27 +1,20 @@
-import { create } from "zustand";
+import { useEffect } from "react";
 
-type Theme = "light" | "dark" | "system";
-
-interface ThemeState {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-}
-
-const useTheme = create<ThemeState>((set) => ({
-  theme: "system",
-  setTheme: (theme: Theme) => {
+/**
+ * Space theme - Dark mode only
+ * This hook ensures dark mode is always applied
+ */
+export default function useTheme() {
+  useEffect(() => {
+    // Always apply dark mode for the space theme
     const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
-    
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-      root.classList.add(systemTheme);
-    } else {
-      root.classList.add(theme);
-    }
-    
-    set({ theme });
-  },
-}));
+    root.classList.remove("light");
+    root.classList.add("dark");
+  }, []);
 
-export default useTheme;
+  return {
+    theme: "dark" as const,
+    // No-op since we're dark-only, but kept for API compatibility
+    setTheme: () => {},
+  };
+}

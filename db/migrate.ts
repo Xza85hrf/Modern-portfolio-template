@@ -4,7 +4,18 @@ import 'dotenv/config';
 
 const databaseUrl = process.env.DATABASE_URL!;
 
+// Detect if using Neon serverless (skip database creation)
+const isNeonServerless = databaseUrl.includes('.neon.tech') ||
+                         databaseUrl.includes('neon.') ||
+                         process.env.SKIP_DB_CREATE === 'true';
+
 async function createDatabaseIfNotExists() {
+  // Skip for Neon serverless - database is pre-created
+  if (isNeonServerless) {
+    console.log('Neon serverless detected - skipping database creation');
+    return;
+  }
+
   // Connect to the default postgres database to create the new database
   const defaultClient = new pg.Client({
     connectionString: databaseUrl.replace('/portfolio', '/postgres')
@@ -12,10 +23,10 @@ async function createDatabaseIfNotExists() {
 
   try {
     await defaultClient.connect();
-    
+
     // Check if database exists
     const checkResult = await defaultClient.query(`
-      SELECT 1 FROM pg_catalog.pg_database 
+      SELECT 1 FROM pg_catalog.pg_database
       WHERE datname = 'portfolio'
     `);
 
@@ -118,14 +129,31 @@ async function main() {
       );
     `);
 
-    // Create default admin user
-    const hashedPassword = await bcrypt.hash('admin123', 10);
-    
-    await client.query(`
-      INSERT INTO admin_users (username, password_hash)
-      VALUES ($1, $2)
-      ON CONFLICT (username) DO NOTHING;
-    `, ['admin', hashedPassword]);
+    // Create default admin user if ADMIN_PASSWORD is set
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (adminPassword && adminPassword.length >= 12) {
+      const hashedPassword = await bcrypt.hash(adminPassword, 12);
+
+      await client.query(`
+        INSERT INTO admin_users (username, password_hash)
+        VALUES ($1, $2)
+        ON CONFLICT (username) DO UPDATE SET password_hash = EXCLUDED.password_hash;
+      `, ['admin', hashedPassword]);
+
+      console.log('Admin user configured with ADMIN_PASSWORD');
+    } else if (process.env.NODE_ENV !== 'production') {
+      // Development only: create with default password
+      const devPassword = await bcrypt.hash('dev-admin-password', 12);
+      await client.query(`
+        INSERT INTO admin_users (username, password_hash)
+        VALUES ($1, $2)
+        ON CONFLICT (username) DO NOTHING;
+      `, ['admin', devPassword]);
+
+      console.log('Development admin user created (password: dev-admin-password)');
+    } else {
+      console.log('Skipping admin user creation: ADMIN_PASSWORD not set or too short');
+    }
 
     console.log('Database initialization completed successfully!');
   } catch (error) {
