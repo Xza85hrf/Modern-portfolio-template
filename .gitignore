@@ -46,3 +46,4 @@ logs
 package-lock.json
 .env.production.credentials
 .mcp.json
+build
