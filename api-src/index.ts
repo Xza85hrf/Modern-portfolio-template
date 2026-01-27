@@ -43,6 +43,9 @@ async function initialize() {
 
 const app = express();
 
+// Trust proxy for Vercel/serverless environments
+app.set('trust proxy', 1);
+
 // Health check endpoint (before other middleware)
 app.get('/api/health', (_req, res) => {
   res.json({
@@ -62,21 +65,38 @@ app.use(helmet());
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(s => s.trim()) || [];
 app.use(cors({
   origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, server-side, etc.)
     if (!origin) return callback(null, true);
+    // In development, allow all origins
     if (process.env.NODE_ENV !== 'production') return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+    // Allow same-site requests (Vercel deployments)
+    if (origin.endsWith('.vercel.app') || origin.includes('localhost')) {
+      return callback(null, true);
+    }
+    // Check against custom allowed origins
+    if (allowedOrigins.length > 0 && allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    // Allow if no custom origins configured (default permissive for portfolio)
+    if (allowedOrigins.length === 0) {
+      return callback(null, true);
+    }
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
 }));
 
-// Rate limiting
+// Rate limiting with proper proxy support
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   message: { message: 'Too many requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  // Use X-Forwarded-For header for client IP (Vercel sets this)
+  keyGenerator: (req) => {
+    return req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown';
+  },
 });
 
 app.use('/api/', apiLimiter);
