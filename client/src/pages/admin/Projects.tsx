@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type Project, insertProjectSchema } from "@db/schema";
+import { type Project } from "@db/schema";
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Github, RefreshCw, Wand2, ImageIcon, Pencil, Check, X } from "lucide-react";
@@ -30,14 +30,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
-import { type InsertProject } from "@db/schema";
+import { z } from "zod";
 
-type ProjectFormData = Omit<
-  InsertProject,
-  "id" | "createdAt" | "updatedAt" | "metadata"
-> & {
-  technologies: string[];
-};
+// Custom form schema that properly types technologies as string[]
+const projectFormSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  image: z.string().min(1, "Image URL is required"),
+  technologies: z.array(z.string()).default([]),
+  link: z.string().nullable().optional(),
+  githubLink: z.string().nullable().optional(),
+});
+
+type ProjectFormData = z.infer<typeof projectFormSchema>;
 
 export default function Projects() {
   const { toast } = useToast();
@@ -68,7 +73,7 @@ export default function Projects() {
   });
 
   const form = useForm<ProjectFormData>({
-    resolver: zodResolver(insertProjectSchema),
+    resolver: zodResolver(projectFormSchema),
     defaultValues: {
       title: "",
       description: "",
