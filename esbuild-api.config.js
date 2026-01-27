@@ -3,7 +3,7 @@ import * as esbuild from 'esbuild';
 const isProduction = process.env.NODE_ENV === 'production';
 
 await esbuild.build({
-  entryPoints: ['api/index.ts'],
+  entryPoints: ['api/index.source.ts'],
   bundle: true,
   platform: 'node',
   target: 'node18',
