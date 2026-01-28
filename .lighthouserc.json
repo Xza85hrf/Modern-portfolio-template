@@ -1,0 +1,20 @@
+{
+  "ci": {
+    "collect": {
+      "url": ["http://localhost:4173"],
+      "numberOfRuns": 3
+    },
+    "assert": {
+      "preset": "lighthouse:recommended",
+      "assertions": {
+        "categories:performance": "off",
+        "categories:accessibility": "warn",
+        "categories:best-practices": "warn",
+        "categories:seo": "warn"
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}

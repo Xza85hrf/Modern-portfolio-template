@@ -1,5 +1,7 @@
 import * as esbuild from 'esbuild';
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 await esbuild.build({
   entryPoints: ['server/index.ts'],
   bundle: true,
@@ -7,7 +9,8 @@ await esbuild.build({
   target: 'node18',
   format: 'esm',
   outfile: 'dist/server/index.js',
-  sourcemap: true,
+  sourcemap: !isProduction, // Disable source maps in production
+  minify: isProduction, // Minify in production
   external: [
     'express',
     'drizzle-orm',
@@ -19,11 +22,22 @@ await esbuild.build({
     'bcrypt',
     'vite',
     '@babel/*',
-    'typescript'
+    'typescript',
+    'jose',
+    'express-rate-limit',
+    'cors',
+    // vite-plugin-checker optional deps
+    'stylelint',
+    'meow',
+    'vls',
+    'vite-plugin-checker'
   ],
   loader: {
     '.ts': 'ts',
     '.tsx': 'tsx'
   },
-  plugins: []
+  plugins: [],
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
+  }
 });

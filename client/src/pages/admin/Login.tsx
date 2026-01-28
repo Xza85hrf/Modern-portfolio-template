@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation } from "wouter";
 import { z } from "zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -31,9 +31,16 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+
+  // Redirect to admin dashboard when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      setLocation("/admin");
+    }
+  }, [isAuthenticated, setLocation]);
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -48,14 +55,14 @@ export default function Login() {
       // Trim whitespace from credentials
       const cleanUsername = data.username.trim();
       const cleanPassword = data.password.trim();
-      
+
       const success = await login(cleanUsername, cleanPassword);
       if (success) {
         toast({
           title: "Login successful",
           description: "Welcome to the admin panel",
         });
-        setLocation("/admin");
+        // Redirect is handled by useEffect watching isAuthenticated
       } else {
         toast({
           title: "Login failed",

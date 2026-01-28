@@ -1,0 +1,36 @@
+# Development and documentation
+.claude/
+.playwright-mcp/
+docs/
+
+# Personal files
+CV/
+n8n-workflows/
+portable-kit/
+Image-generation-prompts/
+
+# Scripts and testing
+scripts/
+**/*.test.ts
+server/tests/
+
+# Templates and configs
+.env.template
+
+# Editor and IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Node modules (Vercel handles this)
+node_modules/
+
+# Build artifacts (rebuilt on deploy)
+dist/
+
+# Logs
+*.log
+npm-debug.log*

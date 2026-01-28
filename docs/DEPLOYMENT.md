@@ -21,20 +21,13 @@ This project is a platform-agnostic full-stack application that can be deployed 
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/Xza85hrf/Modern-portfolio-dashboard.git
-   cd Modern-portfolio-dashboard
+   git clone https://github.com/Xza85hrf/Modern-portfolio-template.git
+   cd portfolio-template
    ```
 
-2. Replace the package.json with the clean template:
+2. Install dependencies:
 
    ```bash
-   # Backup existing package.json (optional)
-   cp package.json package.json.backup
-   
-   # Copy the template to package.json
-   cp package.template.json package.json
-   
-   # Install dependencies
    npm install
    ```
 
@@ -43,8 +36,6 @@ This project is a platform-agnostic full-stack application that can be deployed 
    ```bash
    npm run build
    ```
-
-Note: The package.template.json file contains a clean configuration without any platform-specific dependencies while maintaining all core functionality. This ensures a smooth deployment process across different hosting platforms.
 
 ## Prerequisites
 
@@ -90,8 +81,8 @@ COOKIE_SECRET=your_cookie_secret
 1. Clone and prepare the repository:
 
    ```bash
-   git clone https://github.com/Xza85hrf/Modern-portfolio-dashboard.git
-   cd Modern-portfolio-dashboard
+   git clone https://github.com/Xza85hrf/Modern-portfolio-template.git
+   cd portfolio-template
    ```
 
 2. Install dependencies:

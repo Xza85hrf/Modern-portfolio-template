@@ -1,0 +1,161 @@
+# Dependabot Configuration for Portfolio Dashboard
+# Automated dependency updates with safety checks
+# Documentation: https://docs.github.com/en/code-security/dependabot
+
+# CRITICAL WARNING:
+# Dependabot has a bug where it removes "type": "module" from package.json
+# This breaks the build system. All Dependabot PRs MUST be checked for this issue.
+#
+# BEFORE MERGING ANY DEPENDABOT PR:
+# 1. Check that package.json still contains "type": "module"
+# 2. If missing, DO NOT MERGE - close the PR instead
+#
+# CI Protection: The build will fail if "type" field is missing
+
+version: 2
+updates:
+  # ==========================================
+  # NPM DEPENDENCIES - PRODUCTION & DEV
+  # ==========================================
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Warsaw"
+
+    open-pull-requests-limit: 10
+    versioning-strategy: increase-if-necessary
+
+    # Group updates to reduce PR noise
+    groups:
+      # Patch updates - safest, can be auto-merged
+      patch-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+
+      # Minor updates for specific safe packages
+      minor-safe-updates:
+        patterns:
+          - "@types/*"
+          - "typescript"
+          - "eslint*"
+          - "@typescript-eslint/*"
+          - "prettier"
+        update-types:
+          - "minor"
+
+      # Vite & React ecosystem updates
+      vite-react-ecosystem:
+        patterns:
+          - "vite"
+          - "vite-*"
+          - "@vitejs/*"
+          - "react"
+          - "react-dom"
+          - "@tanstack/*"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # UI libraries (Radix UI, Framer Motion)
+      ui-libraries:
+        patterns:
+          - "@radix-ui/*"
+          - "framer-motion"
+          - "lucide-react"
+          - "tailwind*"
+          - "class-variance-authority"
+          - "clsx"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # Animation libraries
+      animation-libraries:
+        patterns:
+          - "gsap"
+          - "@gsap/*"
+          - "lottie-*"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # Backend/API dependencies
+      backend-deps:
+        patterns:
+          - "express"
+          - "express-*"
+          - "drizzle-*"
+          - "@neondatabase/*"
+          - "cors"
+          - "helmet"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # Development tools
+      dev-dependencies:
+        patterns:
+          - "esbuild"
+          - "tsx"
+          - "concurrently"
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+
+    pull-request-branch-name:
+      separator: "/"
+
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+
+    labels:
+      - "dependencies"
+      - "automated"
+
+    target-branch: "main"
+    rebase-strategy: "auto"
+
+  # ==========================================
+  # GITHUB ACTIONS DEPENDENCIES
+  # ==========================================
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Warsaw"
+
+    open-pull-requests-limit: 3
+
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+
+    labels:
+      - "ci"
+      - "dependencies"
+      - "automated"
+
+    target-branch: "main"
+
+# ==========================================
+# UPDATE STRATEGY NOTES
+# ==========================================
+#
+# - Patch updates: Grouped, can be auto-merged (safest)
+# - Minor updates: Grouped by category, require CI to pass
+# - Major updates: Require manual review
+#
+# Safety Measures:
+# 1. All PRs must pass CI checks (build, TypeScript)
+# 2. CI verifies "type": "module" is present
+# 3. Updates are grouped to reduce PR noise

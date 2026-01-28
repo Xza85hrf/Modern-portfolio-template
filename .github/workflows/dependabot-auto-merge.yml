@@ -1,0 +1,131 @@
+name: Dependabot Auto-Approve
+
+# Automatically approves and enables auto-merge for safe Dependabot updates
+# GitHub will merge automatically once CI passes
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-approve:
+    name: Auto-approve safe updates
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+
+    steps:
+      - name: Get Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Approve and enable auto-merge for patch updates
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEP_NAMES: ${{ steps.metadata.outputs.dependency-names }}
+          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
+        run: |
+          echo "✅ Approving patch update: $DEP_NAMES"
+          echo "Update type: $UPDATE_TYPE"
+
+          gh pr review --approve "$PR_URL"
+          gh pr merge --auto --squash "$PR_URL"
+
+          gh pr comment "$PR_URL" --body "✅ **Auto-approved: Patch update**
+
+          This is a patch update which only includes bug fixes and security patches.
+
+          **Dependencies:** $DEP_NAMES
+          **Update type:** Patch (safest)
+
+          Auto-merge is enabled. This PR will merge automatically once all CI checks pass."
+
+      - name: Approve and enable auto-merge for safe minor updates
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-minor' &&
+          (
+            startsWith(steps.metadata.outputs.dependency-names, '@types/') ||
+            startsWith(steps.metadata.outputs.dependency-names, '@typescript-eslint/') ||
+            startsWith(steps.metadata.outputs.dependency-names, 'eslint') ||
+            startsWith(steps.metadata.outputs.dependency-names, 'typescript') ||
+            startsWith(steps.metadata.outputs.dependency-names, 'prettier')
+          )
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEP_NAMES: ${{ steps.metadata.outputs.dependency-names }}
+        run: |
+          echo "✅ Approving safe minor update: $DEP_NAMES"
+
+          gh pr review --approve "$PR_URL"
+          gh pr merge --auto --squash "$PR_URL"
+
+          gh pr comment "$PR_URL" --body "✅ **Auto-approved: Safe minor update**
+
+          This minor update is for development dependencies or type definitions.
+
+          **Dependencies:** $DEP_NAMES
+          **Update type:** Minor (dev tools/types only)
+
+          Auto-merge is enabled. Will merge when CI passes."
+
+      - name: Comment on other minor updates
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-minor' &&
+          !(
+            startsWith(steps.metadata.outputs.dependency-names, '@types/') ||
+            startsWith(steps.metadata.outputs.dependency-names, '@typescript-eslint/') ||
+            startsWith(steps.metadata.outputs.dependency-names, 'eslint') ||
+            startsWith(steps.metadata.outputs.dependency-names, 'typescript') ||
+            startsWith(steps.metadata.outputs.dependency-names, 'prettier')
+          )
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEP_NAMES: ${{ steps.metadata.outputs.dependency-names }}
+        run: |
+          gh pr comment "$PR_URL" --body "⚠️ **Minor update - Manual review recommended**
+
+          This is a minor version update for a runtime dependency.
+
+          **Dependencies:** $DEP_NAMES
+          **Update type:** Minor
+
+          **Please review:**
+          1. Check the changelog for new features
+          2. Ensure backward compatibility
+          3. Test locally if making significant changes
+
+          CI will run automatically. Merge manually after reviewing."
+
+      - name: Comment on major updates
+        if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEP_NAMES: ${{ steps.metadata.outputs.dependency-names }}
+        run: |
+          gh pr comment "$PR_URL" --body "**Major version update - Manual review required**
+
+          This PR updates dependencies to a new major version.
+
+          **Dependencies:** $DEP_NAMES
+          **Update type:** Major
+
+          **Breaking changes expected!**
+
+          **Action required:**
+          1. Read the changelog carefully
+          2. Check for breaking changes
+          3. Test thoroughly
+          4. Update code if necessary
+          5. Manually approve and merge when ready
+
+          **Do not auto-merge this PR.**"

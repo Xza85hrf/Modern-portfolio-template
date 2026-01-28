@@ -5,26 +5,24 @@ import { setupVite, serveStatic } from "./vite";
 import { createServer } from "http";
 import { AddressInfo } from 'net';
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import cors from 'cors';
+import logger from './lib/logger';
 
-// Dummy logger module
-const logger = {
-  info: (message: any, ...optionalParams: any[]) => console.log(message, ...optionalParams),
-  warn: (message: any, ...optionalParams: any[]) => console.warn(message, ...optionalParams),
-  error: (message: any, ...optionalParams: any[]) => console.error(message, ...optionalParams),
-};
+// Global error handlers to prevent server crashes
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception - Server will continue running:', error);
+  // Don't exit - let the server continue
+});
 
-// Dummy security module
-const sanitizeInput = (input: any) => {
-  // Placeholder for input sanitization logic
-  // You should implement proper sanitization here to prevent vulnerabilities
-  // For example, using libraries like DOMPurify for HTML sanitization
-  // or escaping special characters to prevent SQL injection
-  
-  // Currently, this function does nothing, which is insecure.
-  return input; 
-};
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection:', { reason, promise });
+  // Don't exit - let the server continue
+});
 
 function log(message: string) {
+  if (process.env.NODE_ENV === 'production') return;
+
   const formattedTime = new Date().toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
@@ -36,17 +34,74 @@ function log(message: string) {
 }
 
 const app = express();
-app.use(express.json());
-// Security middleware
-app.use(helmet()); // Set security headers
 
-// Input sanitization middleware
+// Trust proxy for Vercel/serverless environments
+app.set('trust proxy', 1);
+
+// Security middleware
+app.use(helmet());
+
+// CORS configuration
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(s => s.trim()) || [];
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, server-side, etc.)
+    if (!origin) return callback(null, true);
+    // In development, allow all origins
+    if (process.env.NODE_ENV !== 'production') return callback(null, true);
+    // Allow same-site requests (Vercel deployments)
+    if (origin.endsWith('.vercel.app') || origin.includes('localhost')) {
+      return callback(null, true);
+    }
+    // Check against custom allowed origins
+    if (allowedOrigins.length > 0 && allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    // Allow if no custom origins configured (default permissive for portfolio)
+    if (allowedOrigins.length === 0) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
+
+// Rate limiting with proper proxy support
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per window
+  message: { message: 'Too many requests, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Use X-Forwarded-For header for client IP (Vercel sets this)
+  keyGenerator: (req) => {
+    return req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
+  },
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 login attempts per window
+  message: { message: 'Too many login attempts, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    return req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
+  },
+});
+
+// Apply rate limiting
+app.use('/api/', apiLimiter);
+app.use('/api/auth/', authLimiter);
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false }));
+
+// Ensure UTF-8 encoding for all JSON responses (Polish character support)
 app.use((req, res, next) => {
-  sanitizeInput(req.body); // Sanitize request body
-  sanitizeInput(req.query); // Sanitize query parameters
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
   next();
 });
-app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -122,12 +177,8 @@ function findAvailablePort(server: any, initialPort: number): Promise<number> {
       message = err.name + ': ' + err.message;
     }
 
-    // Logging (using Pino for structured logs)
-    logger.error({ 
-      req: { method: req.method, url: req.url }, 
-      err: err.stack || err, // Full error in development, just message in production
-      message,
-    }, 'Request error');
+    // Log the error
+    logger.error(`Request error: ${req.method} ${req.url} - ${message}`, err);
 
     // Send error response to client
     res.status(status).json({ error: message }); 
@@ -142,14 +193,14 @@ function findAvailablePort(server: any, initialPort: number): Promise<number> {
     serveStatic(app);
   }
 
-  // Use PORT env var or default to 5000, with fallback to dynamic port
-  const initialPort = process.env.PORT ? parseInt(process.env.PORT) : 5000;
+  // Use PORT env var or default to 5001 for the API server (5000 is used by Vite)
+  const initialPort = process.env.PORT ? parseInt(process.env.PORT) : 5001;
   
   try {
     const availablePort = await findAvailablePort(server, initialPort);
     log(`serving on port ${availablePort}`);
   } catch (error) {
-    console.error('Failed to start server:', error);
+    logger.error('Failed to start server:', error);
     process.exit(1);
   }
 })();
