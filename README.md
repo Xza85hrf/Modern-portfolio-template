@@ -10,22 +10,15 @@ A modern, full-stack portfolio template built with React and Express. Features a
 
 ## Screenshots
 
-<details>
-<summary>Click to view screenshots</summary>
-
-### Home Page
 ![Home Page](docs/screenshots/home.png)
 
-### About Page
-![About Page](docs/screenshots/about.png)
+| About | Portfolio | Contact |
+|-------|-----------|---------|
+| ![About](docs/screenshots/about.png) | ![Portfolio](docs/screenshots/portfolio.png) | ![Contact](docs/screenshots/contact.png) |
 
-### Portfolio
-![Portfolio](docs/screenshots/portfolio.png)
+<details>
+<summary>Admin Dashboard</summary>
 
-### Contact
-![Contact](docs/screenshots/contact.png)
-
-### Admin Dashboard
 ![Admin Dashboard](docs/screenshots/admin.png)
 
 </details>
