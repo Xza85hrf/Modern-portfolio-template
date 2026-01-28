@@ -4,6 +4,30 @@ const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 });
 
+// GitHub username for fetching repos - must be set in environment
+const GITHUB_USERNAME = process.env.GITHUB_USERNAME;
+
+if (!GITHUB_USERNAME) {
+  console.warn("GITHUB_USERNAME environment variable not set. GitHub integration will require username to be passed explicitly.");
+}
+
+export interface GitHubRepo {
+  id: number;
+  name: string;
+  full_name: string;
+  description: string | null;
+  html_url: string;
+  homepage: string | null;
+  language: string | null;
+  languages: string[];
+  stars: number;
+  forks: number;
+  topics: string[];
+  created_at: string;
+  updated_at: string;
+  pushed_at: string;
+}
+
 export async function getRepositoryInfo(owner: string, repo: string) {
   try {
     const { data } = await octokit.repos.get({
@@ -36,4 +60,121 @@ export async function extractRepoInfo(githubUrl: string) {
   } catch (error) {
     throw new Error('Invalid GitHub URL');
   }
+}
+
+/**
+ * Fetch all public repositories for the configured GitHub user
+ */
+export async function getAllPublicRepos(username?: string): Promise<GitHubRepo[]> {
+  const targetUsername = username || GITHUB_USERNAME;
+  if (!targetUsername) {
+    throw new Error("GitHub username not provided and GITHUB_USERNAME environment variable not set");
+  }
+  try {
+    const repos: GitHubRepo[] = [];
+    let page = 1;
+    const perPage = 100;
+
+    // Paginate through all repos
+    while (true) {
+      const { data } = await octokit.repos.listForUser({
+        username: targetUsername,
+        type: "owner", // Get owned repos, filter private ones below
+        sort: "updated",
+        direction: "desc",
+        per_page: perPage,
+        page,
+      });
+
+      if (data.length === 0) break;
+
+      // Fetch languages for each repo
+      for (const repo of data) {
+        // Skip forks and private repos
+        if (repo.fork || repo.private) continue;
+
+        let languages: string[] = [];
+        try {
+          const { data: langData } = await octokit.repos.listLanguages({
+            owner: targetUsername,
+            repo: repo.name,
+          });
+          languages = Object.keys(langData);
+        } catch {
+          languages = repo.language ? [repo.language] : [];
+        }
+
+        repos.push({
+          id: repo.id,
+          name: repo.name,
+          full_name: repo.full_name,
+          description: repo.description ?? null,
+          html_url: repo.html_url,
+          homepage: repo.homepage ?? null,
+          language: repo.language ?? null,
+          languages,
+          stars: repo.stargazers_count ?? 0,
+          forks: repo.forks_count ?? 0,
+          topics: repo.topics || [],
+          created_at: repo.created_at || "",
+          updated_at: repo.updated_at || "",
+          pushed_at: repo.pushed_at || "",
+        });
+      }
+
+      if (data.length < perPage) break;
+      page++;
+    }
+
+    return repos;
+  } catch (error) {
+    console.error("Error fetching public repos:", error);
+    throw error;
+  }
+}
+
+/**
+ * Generate an OpenGraph image URL for a GitHub repo
+ * Uses GitHub's social preview or a placeholder
+ */
+export function getRepoImageUrl(owner: string, repo: string): string {
+  // GitHub's OpenGraph image service
+  return `https://opengraph.githubassets.com/1/${owner}/${repo}`;
+}
+
+/**
+ * Convert a GitHub repo to a project-compatible format
+ */
+export function repoToProject(repo: GitHubRepo, owner?: string) {
+  const targetOwner = owner || GITHUB_USERNAME || "github";  // Fallback for URL generation only
+  return {
+    title: formatRepoName(repo.name),
+    description: repo.description || `A ${repo.language || "software"} project`,
+    image: getRepoImageUrl(targetOwner, repo.name),
+    technologies: repo.languages.length > 0 ? repo.languages : (repo.language ? [repo.language] : []),
+    link: repo.homepage || null,
+    githubLink: repo.html_url,
+    metadata: {
+      github: {
+        stars: repo.stars,
+        forks: repo.forks,
+        language: repo.language,
+        topics: repo.topics,
+        lastUpdate: repo.pushed_at,
+        createdAt: repo.created_at,
+      },
+    },
+  };
+}
+
+/**
+ * Format repo name to a readable title (e.g., "my-cool-project" -> "My Cool Project")
+ * Unicode-aware to properly handle Polish and other non-ASCII characters
+ */
+function formatRepoName(name: string): string {
+  return name
+    .replace(/[-_]/g, " ")
+    .split(" ")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }

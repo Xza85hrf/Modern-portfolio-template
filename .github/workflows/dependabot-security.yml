@@ -1,0 +1,89 @@
+name: Dependabot Security Updates
+
+# Handles Dependabot security updates specifically
+# Auto-approves and enables auto-merge for security patches
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  security-auto-approve:
+    name: Auto-approve security updates
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+
+    steps:
+      - name: Get Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for security update
+        id: check-security
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          # Check if this is a security update
+          if echo "$PR_TITLE" | grep -qiE "(security|vulnerability|CVE)" || \
+             echo "$PR_BODY" | grep -qiE "(security|vulnerability|CVE)"; then
+            echo "is_security=true" >> $GITHUB_OUTPUT
+            echo "✅ This is a security update"
+          else
+            echo "is_security=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ This is not a security update"
+          fi
+
+      - name: Auto-approve security updates
+        if: steps.check-security.outputs.is_security == 'true'
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEP_NAMES: ${{ steps.metadata.outputs.dependency-names }}
+          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
+        run: |
+          echo "Security update detected for: $DEP_NAMES"
+          echo "Update type: $UPDATE_TYPE"
+
+          gh pr review --approve "$PR_URL"
+          gh pr merge --auto --squash "$PR_URL"
+
+          gh pr comment "$PR_URL" --body "**Auto-approved: Security Update**
+
+          This PR fixes a security vulnerability and has been automatically approved.
+
+          **Dependencies:** $DEP_NAMES
+          **Update type:** $UPDATE_TYPE
+
+          **Why auto-approved:**
+          - Security updates are prioritized
+          - Vulnerabilities should be patched quickly
+          - All CI checks must still pass before merging
+
+          **What happens next:**
+          1. CI will run automatically
+          2. If all checks pass, PR will auto-merge
+          3. If any check fails, auto-merge will be cancelled
+
+          ---
+          Automated by GitHub Actions"
+
+      - name: Label security PR
+        if: steps.check-security.outputs.is_security == 'true'
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr edit "$PR_URL" --add-label "security" --add-label "priority-high"
+
+      - name: Log non-security update
+        if: steps.check-security.outputs.is_security == 'false'
+        run: |
+          echo "ℹ️ This is a regular dependency update (not security-related)"
+          echo "It will be handled by the standard Dependabot auto-merge workflow"

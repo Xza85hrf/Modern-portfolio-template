@@ -44,19 +44,19 @@ export default function Admin() {
     <ProtectedRoute>
       <SidebarProvider defaultOpen>
         <Sidebar variant="inset" className="border-none">
-          <SidebarHeader className="border-b px-6 py-3">
-            <div className="flex items-center justify-between">
+          <SidebarHeader className="border-b px-6 py-4">
+            <div className="flex flex-col gap-3">
               <span className="text-lg font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                 Admin Panel
               </span>
               <Button
-                variant="ghost"
-                size="icon"
+                variant="outline"
+                size="sm"
                 onClick={logout}
-                className="h-8 w-8"
-                title="Logout"
+                className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive hover:border-destructive"
               >
                 <LogOut className="h-4 w-4" />
+                Logout
               </Button>
             </div>
           </SidebarHeader>

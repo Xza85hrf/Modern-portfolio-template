@@ -14,6 +14,7 @@ import {
   type Message,
   type Analytics,
 } from "@db/schema";
+import { apiGet } from "@/lib/api";
 import { BarChart, Clock, Timer, Globe, Calendar } from "lucide-react";
 import {
   BarChart as Chart,
@@ -55,22 +56,22 @@ function getLatestUpdate(
 export default function Dashboard() {
   const { data: projects } = useQuery<Project[]>({
     queryKey: ["projects"],
-    queryFn: () => fetch("/api/projects").then((res) => res.json()),
+    queryFn: () => apiGet<Project[]>("/api/projects"),
   });
 
   const { data: posts } = useQuery<Post[]>({
     queryKey: ["posts"],
-    queryFn: () => fetch("/api/posts").then((res) => res.json()),
+    queryFn: () => apiGet<Post[]>("/api/posts"),
   });
 
   const { data: skills } = useQuery<Skill[]>({
     queryKey: ["skills"],
-    queryFn: () => fetch("/api/skills").then((res) => res.json()),
+    queryFn: () => apiGet<Skill[]>("/api/skills"),
   });
 
   const { data: messages } = useQuery<Message[]>({
     queryKey: ["messages"],
-    queryFn: () => fetch("/api/messages").then((res) => res.json()),
+    queryFn: () => apiGet<Message[]>("/api/messages", true), // Requires auth
   });
 
   const dashboardStats = [
@@ -133,7 +134,7 @@ export default function Dashboard() {
     };
   }>({
     queryKey: ["analytics"],
-    queryFn: () => fetch("/api/analytics").then((res) => res.json()),
+    queryFn: () => apiGet("/api/analytics", true), // Requires auth
   });
 
   return (

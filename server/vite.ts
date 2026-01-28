@@ -3,10 +3,23 @@ import fs from "fs";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
+import rateLimit from "express-rate-limit";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 import { type Server } from "http";
 import viteConfig from "../vite.config";
+
+// Rate limiter for static file serving (production)
+const staticLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 300, // Higher limit for static files
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for assets (already cached by CDN/browser)
+    return req.path.startsWith('/assets/');
+  },
+});
 
 export async function setupVite(app: Express, server: Server) {
   const vite = await createViteServer({
@@ -54,7 +67,8 @@ export function serveStatic(app: Express) {
   app.use(express.static(distPath));
 
   // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
+  // Rate limiting applied to prevent DoS on filesystem access
+  app.use("*", staticLimiter, (_req, res) => {
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
