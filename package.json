@@ -32,7 +32,7 @@
     "@google/genai": "^1.38.0",
     "@gsap/react": "^2.1.2",
     "@hookform/resolvers": "^3.9.1",
-    "@neondatabase/serverless": "^0.9.5",
+    "@neondatabase/serverless": "^1.0.2",
     "@octokit/rest": "^21.0.2",
     "@radix-ui/react-accordion": "^1.2.1",
     "@radix-ui/react-alert-dialog": "^1.1.2",
