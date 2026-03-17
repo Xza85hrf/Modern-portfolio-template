@@ -14,7 +14,7 @@ interface StatsCounterProps {
  * Get a Lucide icon component by name
  */
 function getIconComponent(iconName: string): React.ComponentType<{ className?: string }> {
-  const icons = LucideIcons as Record<string, React.ComponentType<{ className?: string }>>;
+  const icons = LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>;
   return icons[iconName] || LucideIcons.HelpCircle;
 }
 
