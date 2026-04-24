@@ -75,8 +75,12 @@ PORT=3000 npm run dev
 
 1. Regular backups
 
+   The project does not ship a built-in backup script. Use your
+   provider's native tooling — for example `pg_dump` for any
+   PostgreSQL instance:
+
    ```bash
-   npm run db:backup
+   pg_dump "$DATABASE_URL" > backups/portfolio-$(date +%F).sql
    ```
 
 2. Update schema

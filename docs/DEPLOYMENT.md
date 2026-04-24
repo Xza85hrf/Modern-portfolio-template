@@ -41,7 +41,7 @@ This project is a platform-agnostic full-stack application that can be deployed 
 
 ### Required Software
 
-- Node.js v18 or newer
+- Node.js v20 or newer (enforced by `engines.node` in `package.json`)
 - PostgreSQL 12 or newer
 - npm or yarn package manager
 
